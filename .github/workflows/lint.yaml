@@ -1,0 +1,29 @@
+name: lint
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies.
+        run: pip3 install yamllint ansible-core ansible-lint jmespath
+
+      - name: Install ansible collections
+        run: ansible-galaxy install -r requirements.yaml
+
+      - name: Lint code.
+        run: |
+          yamllint .
+          ansible-lint
