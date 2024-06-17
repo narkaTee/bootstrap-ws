@@ -1,0 +1,9 @@
+---
+user:
+  name: narkat
+  password: password
+  group: narkat
+  shell: /usr/bin/zsh
+  groups:
+    - wheel
+    - rfkill
