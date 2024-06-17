@@ -1,0 +1,14 @@
+---
+- name: Debug outut
+  debug:
+    msg: "{{ vars[(role_path | basename).split('.')[-1].replace('-', '_')] }}"
+  when: DEBUG | d() | bool
+
+- name: Prepare blackarch install
+  include_tasks: prepare.yml
+
+- name: Configure system for blackarch install
+  include_tasks: configure.yml
+
+- name: Install blackarch
+  include_tasks: install.yml

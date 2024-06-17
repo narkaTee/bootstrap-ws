@@ -3,3 +3,10 @@ all:
   hosts:
     laptop:
       ansible_connection: local
+    localhost:
+      ansible_connection: local
+      ansible_become: true
+    localhost_user:
+      ansible_connection: local
+      ansible_become: true
+      ansible_become_user: '{{ user.name }}'

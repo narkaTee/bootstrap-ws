@@ -4,7 +4,7 @@
       - python-psutil
     state: present
 
-- name: germany keyboard layout
+- name: Configure germany keyboard layout
   community.general.dconf:
     key: /org/gnome/desktop/input-sources/sources
     value: "[('xkb', 'de')]"

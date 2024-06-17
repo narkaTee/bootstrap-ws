@@ -30,7 +30,7 @@
   delay: 3
 
 - name: Validate gpg keyring signature
-  ansible.builtin.shell: "gpg --verify --keyserver-options no-auto-key-retrieve --with-fingerprint {{ curl_blackarch_keyring_signature_result.dest }} {{ curl_blackarch_keyring_result.dest }} 2>&1"
+  ansible.builtin.command: "gpg --verify --keyserver-options no-auto-key-retrieve --with-fingerprint {{ curl_blackarch_keyring_signature_result.dest }} {{ curl_blackarch_keyring_result.dest }} 2>&1"
   args:
     chdir: "{{ ansible_blackarch_temp.path }}"
   register: blackarch_keyring_validation_result
@@ -38,7 +38,7 @@
   changed_when: false
 
 - name: Make sure /etc/pacman.d/gnupg is usable
-  ansible.builtin.shell: "pacman-key --init"
+  ansible.builtin.command: "pacman-key --init"
   changed_when: false
 
 - name: Remove gpg keyring signature (else it will give error on import to pacman)
@@ -47,7 +47,7 @@
     path: "{{ curl_blackarch_keyring_signature_result.dest }}"
 
 - name: Install the BlackArch gpg keyring to pacman
-  ansible.builtin.shell: "pacman --config /dev/null --noconfirm -U {{ curl_blackarch_keyring_result.dest }}"
+  ansible.builtin.command: "pacman --config /dev/null --noconfirm -U {{ curl_blackarch_keyring_result.dest }}"
   register: pacman_key_install_result
   failed_when: "'Appending keys from blackarch.gpg' not in pacman_key_install_result.stdout"
 

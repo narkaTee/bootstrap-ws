@@ -1,11 +1,9 @@
 - name: Setup as root
   hosts: localhost
-  #vars:
-  #    foo: bar
   tasks:
-      #- name: Show facts available on the system
-      #  ansible.builtin.debug:
-      #    var: ansible_facts
+      # - name: Show facts available on the system
+      #   ansible.builtin.debug:
+      #     var: ansible_facts
       - name: Install pen testing packages
         ansible.builtin.package:
             name:
