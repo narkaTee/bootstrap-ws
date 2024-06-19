@@ -1,0 +1,6 @@
+---
+dotfiles_ssh: true
+yubikey_pam_keys:
+  - user: user
+    keylines:
+      - ""

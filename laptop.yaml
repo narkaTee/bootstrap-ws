@@ -1,6 +1,16 @@
 ---
-- name: Setup laptop
+- name: Setup with root
   hosts: laptop
-  become: true
   roles:
     - role: yubikey
+  tasks:
+    - name: Basic packages
+      ansible.builtin.package:
+        name:
+          - vim
+          - tmux
+
+- name: Setup with local user
+  hosts: laptop_user
+  roles:
+    - dotfiles

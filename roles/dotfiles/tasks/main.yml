@@ -1,8 +1,25 @@
-- name: Checkout dotfiles
+- name: Install dotfile dependencies
+  ansible.builtin.package:
+    name:
+      - ruby
+  tags: dotfiles
+
+- name: Checkout dotfiles (via http)
   ansible.builtin.git:
     repo: 'https://github.com/narkatee/dotfiles'
     dest: "{{ ansible_facts['user_dir'] }}/dotfiles"
+  when: not dotfiles_ssh
+  tags: dotfiles
+
+- name: Checkout dotfiles (via ssh)
+  ansible.builtin.git:
+    repo: 'git@github.com:narkaTee/dotfiles.git'
+    dest: "{{ ansible_facts['user_dir'] }}/dotfiles"
+  when: dotfiles_ssh
+  tags: dotfiles
+
 - name: Install dotfiles
   ansible.builtin.command:
     chdir: "{{ ansible_facts['user_dir'] }}/dotfiles"
     cmd: "rake install"
+  tags: dotfiles
