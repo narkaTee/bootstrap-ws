@@ -1,4 +1,3 @@
-{% for line in yubikey_pam_keys %}
-# {{ line.comment }}
-{{ line.line }}
+{% for key_entry in yubikey_pam_keys %}
+{{ key_entry.user }}:{{ key_entry.keylines | join(':') }}
 {% endfor %}
