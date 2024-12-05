@@ -2,11 +2,11 @@
 - name: Install BlackArch categories
   ansible.builtin.package:
     name: "{{ blackarch.categories }}"
-    update_cache: yes
+    update_cache: true
   retries: 3
   delay: 3
 
-#- debug:
+# - debug:
 #    msg: "{{ pacman_key_install_result }}"
 
 #  echo 'perform full system upgrade? (pacman -Su) [Yn]:'

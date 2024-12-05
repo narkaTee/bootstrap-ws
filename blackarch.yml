@@ -1,0 +1,145 @@
+- name: Setup as root
+  hosts: localhost
+  vars:
+    blackarch:
+      # The BlackArch mirror list to use
+      mirror: "blackarch-mirrorlist"
+      # Settings for the BlackArch keyring, signature, etc.
+      keyring:
+        url: "https://www.blackarch.org/keyring/blackarch-keyring.pkg.tar.xz"
+        sig: "https://www.blackarch.org/keyring/blackarch-keyring.pkg.tar.xz.sig"
+        key:
+          server: keyserver.ubuntu.com
+          id: "4345771566D76038C7FEB43863EC0ADBEA87E4E3"
+          owner: "Evan Teitelman <teitelmanevan@gmail.com>"
+      # The BlackArch categories to install, also see 'sudo pacman -Sg | grep blackarch'
+      categories:
+        # - "blackarch"
+        # - "blackarch-webapp"
+        # - "blackarch-fuzzer"
+        # - "blackarch-scanner"
+        # - "blackarch-proxy"
+        # - "blackarch-windows"
+        # - "blackarch-dos"
+        # - "blackarch-disassembler"
+        # - "blackarch-cracker"
+        # - "blackarch-voip"
+        # - "blackarch-recon"
+        # - "blackarch-spoof"
+        # - "blackarch-forensic"
+        # - "blackarch-crypto"
+        # - "blackarch-backdoor"
+        # - "blackarch-binary"
+        # - "blackarch-networking"
+        # - "blackarch-misc"
+        # - "blackarch-exploitation"
+        # - "blackarch-defensive"
+        # - "blackarch-wireless"
+        # - "blackarch-automation"
+        # - "blackarch-packer"
+        # - "blackarch-mobile"
+        # - "blackarch-malware"
+        # - "blackarch-reversing"
+        # - "blackarch-sniffer"
+        # - "blackarch-code-audit"
+        # - "blackarch-social"
+        # - "blackarch-honeypot"
+        # - "blackarch-hardware"
+        # - "blackarch-fingerprint"
+        # - "blackarch-debugger"
+        # - "blackarch-firmware"
+        # - "blackarch-config"
+        # - "blackarch-bluetooth"
+        # - "blackarch-database"
+        # - "blackarch-cryptography"
+        # - "blackarch-scan"
+        # - "blackarch-automobile"
+        # - "blackarch-decompiler"
+        # - "blackarch-nfc"
+        # - "blackarch-tunnel"
+        # - "blackarch-drone"
+        # - "blackarch-radio"
+        # - "blackarch-keylogger"
+        # - "blackarch-stego"
+        # - "blackarch-unpacker"
+        # - "blackarch-anti-forensic"
+        # - "blackarch-ids"
+        # - "blackarch-spoff"
+        # - "blackarch-gpu"
+  pre_tasks:
+    - name: Install some base packages
+      ansible.builtin.package:
+        name:
+          - dash
+          - ruby
+          - which
+          - sudo
+          - alacritty
+          - tmux
+          - vim
+          - zsh
+          - zsh-completions
+          - ttf-nerd-fonts-symbols-mono
+          - python-passlib
+        state: present
+  roles:
+    - role: dotfiles
+    - role: blackarch
+  tasks:
+    - name: Sensible zsh default keybinding
+      ansible.builtin.copy:
+        owner: root
+        group: root
+        mode: '0644'
+        src: templates/zshrc-debian
+        dest: /etc/zsh/zshrc
+    # UFW
+    - name: Install ufw
+      ansible.builtin.package:
+        name: ufw
+        state: present
+    - name: Enable ufw
+      community.general.ufw:
+        state: enabled
+        logging: low
+    - name: "Allow incoming access to port 22 on default interface: {{ ansible_facts.default_ipv4.interface }}"
+      community.general.ufw:
+        rule: allow
+        interface: '{{ ansible_facts.default_ipv4.interface }}'
+        direction: in
+        proto: tcp
+        dest: any
+        to_port: '22'
+    - name: Allow group wheel sudo access
+      ansible.builtin.copy:
+        owner: root
+        group: root
+        mode: '0300'
+        src: templates/sudoers-allow-wheel
+        dest: /etc/sudoers.d/allow-wheel
+        validate: /usr/sbin/visudo -csf %s
+    - name: Custom font config
+      ansible.builtin.copy:
+        owner: root
+        group: root
+        mode: '0440'
+        src: templates/default-font-and-mapping.conf
+        dest: /etc/fonts/conf.d/39-custom-mappings.conf
+    - name: User group
+      ansible.builtin.group:
+        name: '{{ user.group }}'
+    - name: User
+      ansible.builtin.user:
+        name: '{{ user.name }}'
+        group: '{{ user.group }}'
+        update_password: on_create
+        password: "{{ user.password | password_hash('sha512') }}"
+        shell: '{{ user.shell }}'
+        groups: '{{ user.groups }}'
+        append: true
+
+- name: Setup as unprivleged user '{{ user.name }}'
+  hosts: localhost_user
+  roles:
+    - role: gnome-settings
+    - role: dotfiles

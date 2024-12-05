@@ -7,7 +7,7 @@
   delay: 3
 
 - name: Update pacman keyring keys
-  shell: "pacman-key --populate"
+  command: "pacman-key --populate"
   retries: 3
   delay: 3
 
