@@ -1,0 +1,4 @@
+{% for line in yubikey_pam_keys %}
+# {{ line.comment }}
+{{ line.line }}
+{% endfor %}

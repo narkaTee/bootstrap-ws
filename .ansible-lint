@@ -1,0 +1,5 @@
+---
+profile: moderate
+
+skip_list:
+  - role-name

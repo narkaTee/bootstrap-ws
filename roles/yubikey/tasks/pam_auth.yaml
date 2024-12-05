@@ -1,0 +1,28 @@
+- name: Install PAM dependencies
+  ansible.builtin.package:
+    name:
+      - libpam-u2f
+      - pamu2fcfg
+
+- name: Create pam key config
+  ansible.builtin.template:
+    dest: /etc/pam.d/common-u2f
+    owner: root
+    group: root
+    mode: "0644"
+    src: pam-u2f.j2
+
+- name: Create u2f keyfile
+  ansible.builtin.template:
+    dest: /etc/u2f_mappings
+    owner: root
+    group: root
+    mode: "0644"
+    src: u2f_mappings.j2
+
+- name: Adjust pam common-auth config
+  ansible.builtin.lineinfile:
+    dest: /etc/pam.d/common-auth
+    regexp: '^@include common-u2f'
+    line: "@include common-u2f"
+    insertbefore: '^# here are the per-package'

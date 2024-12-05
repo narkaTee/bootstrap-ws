@@ -1,0 +1,6 @@
+---
+- name: Setup laptop
+  hosts: laptop
+  become: true
+  roles:
+    - role: yubikey

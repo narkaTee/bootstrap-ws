@@ -1,0 +1,3 @@
+- name: Configure PAM authentication
+  ansible.builtin.include_tasks: "pam_auth.yaml"
+  when: yubikey_pam == true
