@@ -1,1 +1,2 @@
 roles/blackarch/tasks/prepare.yml yaml[line-length]
+roles/firefox/tasks/main.yaml yaml[line-length]
