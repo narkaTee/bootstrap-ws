@@ -1,0 +1,55 @@
+- name: Make sure keyring folder exists
+  ansible.builtin.file:
+      dest: /etc/apt/keyrings
+      state: directory
+      owner: root
+      group: root
+      mode: '0755'
+  tags: ['firefox']
+
+- name: Install Repo
+  block:
+      - name: Install mozilla signing key
+        ansible.builtin.get_url:
+            dest: /etc/apt/keyrings/packages.mozilla.org.asc
+            url: https://packages.mozilla.org/apt/repo-signing-key.gpg
+            owner: root
+            group: root
+            mode: '0644'
+        tags: ['firefox']
+
+      - name: Validate signing key
+        ansible.builtin.command:
+            cmd: gpg --no-auto-check-trustdb --with-colons --import-options show-only --import /etc/apt/keyrings/packages.mozilla.org.asc
+        register: firefox_validate_key
+        failed_when:
+            - firefox_validate_key.rc != 0 or ("fpr:::::::::{{ firefox_key_fingerprint }}:" not in firefox_validate_key.stdout)
+        tags: ['firefox']
+
+  rescue:
+      - name: Delete signing key after failure
+        ansible.builtin.file:
+            dest: /etc/apt/keyrings/packages.mozilla.org.asc
+            state: absent
+        tags: ['firefox']
+
+- name: Install firefox repo
+  ansible.builtin.copy:
+      dest: /etc/apt/sources.list.d/mozilla.list
+      owner: root
+      group: root
+      mode: '0644'
+      content: deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main
+  register: firefox_install_list
+  tags: ['firefox']
+
+- name: Update packages
+  ansible.builtin.apt:
+      update_cache: true
+  when: firefox_install_list.changed
+  tags: ['firefox']
+
+- name: Install firefox
+  ansible.builtin.package:
+      name: firefox
+  tags: ['firefox']

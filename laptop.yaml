@@ -3,6 +3,7 @@
   hosts: laptop
   roles:
     - role: yubikey
+    - role: firefox
   tasks:
     - name: Basic packages
       ansible.builtin.package:
