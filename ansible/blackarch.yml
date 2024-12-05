@@ -139,9 +139,7 @@
       append: true
 
 - name: Setup as unprivleged user '{{ user.name }}'
-  hosts: localhost
-  become: yes
-  become_user: '{{ user.name }}'
+  hosts: localhost_user
   roles:
     - role: gnome-settings
     - role: dotfiles
