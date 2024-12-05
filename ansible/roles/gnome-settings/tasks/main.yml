@@ -1,0 +1,35 @@
+- name: Install required dependencies
+  ansible.builtin.package:
+    name:
+      - python-psutil
+    state: present
+
+- name: germany keyboard layout
+  community.general.dconf:
+    key: /org/gnome/desktop/input-sources/sources
+    value: "[('xkb', 'de')]"
+
+- name: Disable event sounds
+  community.general.dconf:
+    key: /org/gnome/desktop/sound/event-sounds
+    value: 'false'
+
+- name: Dark color scheme
+  community.general.dconf:
+    key: /org/gnome/desktop/interface/color-scheme
+    value: "'prefer-dark'"
+
+- name: Do not remember recent files
+  community.general.dconf:
+    key: /org/gnome/desktop/privacy/remember-recent-files
+    value: 'false'
+
+- name: Delete remembered recent files
+  community.general.dconf:
+    key: /org/gnome/desktop/privacy/recent-files-max-age
+    value: '-1'
+
+- name: Disable automatic suspend
+  community.general.dconf:
+    key: /org/gnome/settings-daemon/plugins/power/sleep-inactive-ac-type
+    value: "'nothing'"

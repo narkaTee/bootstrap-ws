@@ -1,0 +1,33 @@
+---
+- name: Update ArchLinux keyring
+  ansible.builtin.package:
+    name: "archlinux-keyring"
+    state: present
+  retries: 3
+  delay: 3
+
+- name: Update pacman keyring keys
+  shell: "pacman-key --populate"
+  retries: 3
+  delay: 3
+
+- name: Fetch BlackArch mirror
+  ansible.builtin.get_url:
+    url: "https://www.blackarch.org/{{ blackarch.mirror }}"
+    dest: "/etc/pacman.d/{{ blackarch.mirror }}"
+
+- name: Insert/update "[blackarch]" configuration block in /etc/pacman.conf
+  ansible.builtin.blockinfile:
+    path: /etc/pacman.conf
+    marker: '# {mark} blackarch ansible block'
+    block: |
+      [blackarch]
+      Include = /etc/pacman.d/{{ blackarch.mirror }}
+
+- name: Insert/update "[multilib]" configuration block in /etc/pacman.conf
+  ansible.builtin.blockinfile:
+    path: /etc/pacman.conf
+    marker: '# {mark} multilib ansible block'
+    block: |
+      [multilib]
+      Include = /etc/pacman.d/mirrorlist

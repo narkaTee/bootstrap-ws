@@ -1,0 +1,39 @@
+- name: Setup as root
+  hosts: localhost
+  #vars:
+  #    foo: bar
+  tasks:
+      #- name: Show facts available on the system
+      #  ansible.builtin.debug:
+      #    var: ansible_facts
+      - name: Install pen testing packages
+        ansible.builtin.package:
+            name:
+                - whatweb
+                - httrack
+                - whois
+                - dnsrecon
+                - dnsenum
+                - fierce
+                - mtr
+                - wafw00f
+                - sublist3r
+                - theharvester
+                - nmap
+                - netdiscover
+                - fping
+            state: present
+      - name: Install pen testing packages arch specific
+        ansible.builtin.package:
+            name:
+                - bind
+            state: present
+        when: ansible_facts['distribution'] == "Archlinux"
+      - name: Install pen testing packages kali specific
+        ansible.builtin.package:
+            name:
+                - webhttrack
+                - bind9-dnsutils # dig is contained in here, probably already installed
+                - zenmap-kbx
+            state: present
+        when: ansible_facts['distribution'] == "Kali"
