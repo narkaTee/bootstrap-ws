@@ -1,14 +1,23 @@
-# arch botstrapping
+# pen test botstrapping
 
-# base install
+# arch base install
 
 1. `git clone https://github.com/narkatee/archstrap`
-2. `./install.sh`
+2. `./install-arch.sh`
 3. reboot 🚀😎
 
 # setup blackarch
 
-1. base install
+1. arch base install
 2. login as root
-3. `cd blackarch`
-4. `./setup.sh`
+3. `cd ansible`
+4. `./setup.sh blackarch.yml`
+
+# setup pen test tooling
+
+distro independant
+
+1. base install (arch or kali)
+2. login as root
+3. `cd ansible`
+4. `./setup.sh tooling.yml`
