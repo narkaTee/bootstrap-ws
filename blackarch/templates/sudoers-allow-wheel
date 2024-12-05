@@ -1,0 +1,2 @@
+# Allow wheel group to execuute anything
+%wheel ALL=(ALL:ALL) ALL

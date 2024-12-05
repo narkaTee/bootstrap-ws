@@ -1,0 +1,19 @@
+---
+- name: Install BlackArch categories
+  ansible.builtin.package:
+    name: "{{ blackarch.categories }}"
+    update_cache: yes
+  retries: 3
+  delay: 3
+
+#- debug:
+#    msg: "{{ pacman_key_install_result }}"
+
+#  echo 'perform full system upgrade? (pacman -Su) [Yn]:'
+#  read conf < /dev/tty
+#  case "$conf" in
+#    ''|y|Y) pacman -Su ;;
+#    n|N) warn 'some blackarch packages may not work without an up-to-date system.' ;;
+#  esac
+
+#  msg 'BlackArch Linux is ready!'
