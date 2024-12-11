@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+typeset -A fonts
+fonts=(
+    ["SourceCodePro.zip"]="SauceCodeProNerdFont-*"
+)
+
+[ -d "tmp/" ] && rm -rf "tmp/"
+mkdir "tmp/"
+cd tmp || exit 1
+
+for font in "${!fonts[@]}"
+do
+    rm ./*
+    pattern="${fonts[$font]}"
+    echo "Updating $font with pattern $pattern"
+    url="$(curl https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest | jq -r ".assets[] | select(.name | contains(\"${font}\")) | .browser_download_url")"
+    wget "$url" -O "$font"
+    unzip "$font"
+    # shellcheck disable=SC2086 # we want globbing
+    cp $pattern ../files/
+done
