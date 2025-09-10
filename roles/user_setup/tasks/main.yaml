@@ -1,0 +1,13 @@
+- name: Install shell
+  become: true
+  ansible.builtin.package:
+    name:
+      - zsh
+  tags: "user_setup"
+
+- name: Set default shell to zsh for current user
+  become: true
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    shell: "/bin/zsh"
+  tags: "user_setup"

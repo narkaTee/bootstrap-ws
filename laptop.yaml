@@ -16,3 +16,4 @@
   roles:
     - fonts
     - dotfiles
+    - user_setup
