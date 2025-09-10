@@ -6,7 +6,6 @@ all:
       ansible_become: true
     laptop_user:
       ansible_connection: local
-      ansible_become: false
     localhost:
       ansible_connection: local
       ansible_become: true
