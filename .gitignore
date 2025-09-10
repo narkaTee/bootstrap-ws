@@ -4,3 +4,4 @@
 
 __pycache__/
 ansible_collections/
+inventory/group_vars/laptop.yaml

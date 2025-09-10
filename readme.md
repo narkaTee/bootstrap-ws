@@ -1,9 +1,27 @@
 # laptop setup
 
+```
+git clone https://github.com/narkaTee/bootstrap-ws.git
+cd bootstrap-ws
+./setup-laptop.sh
+```
+
 ## yubikey
 
 * pam auth with yubikey
   * https://github.com/Yubico/pam-u2f
+
+Too enable this make sure `inventory/group_vars/laptop.yaml` contains:
+
+```
+yubikey_pam_keys:
+  - user: <username>
+    keylines:
+      - "..."
+      - "..."
+```
+
+each yubikey must be added with a keyline. The line can be obtained by running: `pamu2fcfg -u<username>`
 
 ## dracut
 

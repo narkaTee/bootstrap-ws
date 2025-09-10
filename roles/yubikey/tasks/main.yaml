@@ -1,3 +1,9 @@
+- name: Install yubi key manager
+  become: true
+  ansible.builtin.package:
+    name: "yubikey-manager"
+    state: present
+
 - name: Configure PAM authentication
   ansible.builtin.include_tasks: "pam_auth.yaml"
-  when: yubikey_pam
+  when: yubikey_pam_keys | length > 0
