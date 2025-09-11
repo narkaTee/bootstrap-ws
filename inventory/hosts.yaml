@@ -6,10 +6,10 @@ all:
       ansible_become: true
     laptop_user:
       ansible_connection: local
-    localhost:
+    blackarch:
       ansible_connection: local
       ansible_become: true
-    localhost_user:
+    blackarch_user:
       ansible_connection: local
       ansible_become: true
       ansible_become_user: '{{ user.name }}'

@@ -1,5 +1,4 @@
----
-user:
+blackarch_user:
   name: narkat
   password: password
   group: narkat

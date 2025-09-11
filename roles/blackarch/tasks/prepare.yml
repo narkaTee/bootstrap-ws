@@ -2,37 +2,37 @@
   ansible.builtin.tempfile:
     state: directory
     prefix: "blackarch-role-install"
-  register: ansible_blackarch_temp
+  register: blackarch_ansible_temp
 
 - name: Fetch BlackArch gpg keyring
   ansible.builtin.get_url:
     url: "{{ blackarch.keyring.url }}"
-    dest: "{{ ansible_blackarch_temp.path }}/{{ blackarch.keyring.url | urlsplit('path') | basename }}"
-  register: curl_blackarch_keyring_result
+    dest: "{{ blackarch_ansible_temp.path }}/{{ blackarch.keyring.url | urlsplit('path') | basename }}"
+  register: blackarch_curl_keyring_result
   retries: 3
   delay: 3
 
 - name: Fetch BlackArch gpg keyring signature
   ansible.builtin.get_url:
     url: "{{ blackarch.keyring.sig }}"
-    dest: "{{ ansible_blackarch_temp.path }}/{{ blackarch.keyring.sig | urlsplit('path') | basename }}"
-  register: curl_blackarch_keyring_signature_result
+    dest: "{{ blackarch_ansible_temp.path }}/{{ blackarch.keyring.sig | urlsplit('path') | basename }}"
+  register: blackarch_curl_keyring_signature_result
   retries: 3
   delay: 3
 
 - name: Receive BlackArch gpg signing key
   ansible.builtin.shell: "gpg --keyserver {{ blackarch.keyring.key.server }} --recv-keys {{ blackarch.keyring.key.id }} 2>&1"
-  register: gpg_recv_key_result
+  register: blackarch_gpg_recv_key_result
   failed_when:
-    - "gpg_recv_key_result.rc != 0"
-    - "((\"key {{ blackarch.keyring.key.id[-16:] }}: \"{{ blackarch.keyring.key.owner }}\" not changed\" not in gpg_recv_key_result.stdout) or (\"key {{ blackarch.keyring.key[-16:] }}: public key \"{{ blackarch.keyring.key.owner }}\" imported\" not in gpg_recv_key_result.stdout))"
+    - "blackarch_gpg_recv_key_result.rc != 0"
+    - "((\"key {{ blackarch.keyring.key.id[-16:] }}: \"{{ blackarch.keyring.key.owner }}\" not changed\" not in blackarch_gpg_recv_key_result.stdout) or (\"key {{ blackarch.keyring.key[-16:] }}: public key \"{{ blackarch.keyring.key.owner }}\" imported\" not in blackarch_gpg_recv_key_result.stdout))"
   retries: 3
   delay: 3
 
 - name: Validate gpg keyring signature
-  ansible.builtin.command: "gpg --verify --keyserver-options no-auto-key-retrieve --with-fingerprint {{ curl_blackarch_keyring_signature_result.dest }} {{ curl_blackarch_keyring_result.dest }} 2>&1"
+  ansible.builtin.command: "gpg --verify --keyserver-options no-auto-key-retrieve --with-fingerprint {{ blackarch_curl_keyring_signature_result.dest }} {{ blackarch_curl_keyring_result.dest }} 2>&1"
   args:
-    chdir: "{{ ansible_blackarch_temp.path }}"
+    chdir: "{{ blackarch_ansible_temp.path }}"
   register: blackarch_keyring_validation_result
   failed_when: "blackarch_keyring_validation_result.rc != 0 and ('Good signature from \"{{ blackarch.keyring.key.owner }}\" [unknown]' not in blackarch_keyring_validation_result.stdout)"
   changed_when: false
@@ -44,14 +44,14 @@
 - name: Remove gpg keyring signature (else it will give error on import to pacman)
   ansible.builtin.file:
     state: absent
-    path: "{{ curl_blackarch_keyring_signature_result.dest }}"
+    path: "{{ blackarch_curl_keyring_signature_result.dest }}"
 
 - name: Install the BlackArch gpg keyring to pacman
-  ansible.builtin.command: "pacman --config /dev/null --noconfirm -U {{ curl_blackarch_keyring_result.dest }}"
-  register: pacman_key_install_result
-  failed_when: "'Appending keys from blackarch.gpg' not in pacman_key_install_result.stdout"
+  ansible.builtin.command: "pacman --config /dev/null --noconfirm -U {{ blackarch_curl_keyring_result.dest }}"
+  register: blackarch_pacman_key_install_result
+  failed_when: "'Appending keys from blackarch.gpg' not in blackarch_pacman_key_install_result.stdout"
 
 - name: Cleanup BlackArch temporary build directory
   ansible.builtin.file:
     state: absent
-    path: "{{ ansible_blackarch_temp.path }}"
+    path: "{{ blackarch_ansible_temp.path }}"

@@ -1,5 +1,5 @@
 - name: Setup as root
-  hosts: localhost
+  hosts: blackarch
   vars:
     blackarch:
       # The BlackArch mirror list to use
@@ -127,19 +127,19 @@
         dest: /etc/fonts/conf.d/39-custom-mappings.conf
     - name: User group
       ansible.builtin.group:
-        name: '{{ user.group }}'
+        name: '{{ blackarch_user.group }}'
     - name: User
       ansible.builtin.user:
-        name: '{{ user.name }}'
-        group: '{{ user.group }}'
+        name: '{{ blackarch_user.name }}'
+        group: '{{ blackarch_user.group }}'
         update_password: on_create
-        password: "{{ user.password | password_hash('sha512') }}"
-        shell: '{{ user.shell }}'
-        groups: '{{ user.groups }}'
+        password: "{{ blackarch_user.password | password_hash('sha512') }}"
+        shell: '{{ blackarch_user.shell }}'
+        groups: '{{ blackarch_user.groups }}'
         append: true
 
-- name: Setup as unprivleged user '{{ user.name }}'
-  hosts: localhost_user
+- name: "Setup as unprivleged user"
+  hosts: blackarch_user
   roles:
     - role: gnome-settings
     - role: dotfiles
