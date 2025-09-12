@@ -10,6 +10,8 @@
         name:
           - vim
           - tmux
+          - ansible-lint
+          - shellcheck
 
 - name: Setup with local user
   hosts: laptop_user
