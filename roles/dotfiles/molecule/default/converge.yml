@@ -1,0 +1,11 @@
+---
+- name: Run role
+  hosts: all
+  any_errors_fatal: true
+  module_defaults:
+    package:
+      cache_valid_time: 3600
+  tasks:
+    - name: "Include dotfiles role"
+      include_role:
+        name: "../../../dotfiles"

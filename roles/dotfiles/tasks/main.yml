@@ -4,6 +4,8 @@
   ansible.builtin.package:
     name:
       - ruby
+      - git
+      - zsh
 
 - name: Check if dotfiles directory exists
   ansible.builtin.stat:

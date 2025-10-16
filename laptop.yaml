@@ -12,6 +12,8 @@
           - tmux
           - ansible-lint
           - shellcheck
+          - podman
+          - podman-compose
 
 - name: Setup with local user
   hosts: laptop_user
@@ -19,3 +21,19 @@
     - fonts
     - dotfiles
     - user_setup
+
+  tasks:
+    - name: Install python packages to create venv
+      become: true
+      ansible.builtin.package:
+        name:
+          - python3-venv
+          - python3-pip
+
+    - name: Install molecule in venv
+      ansible.builtin.pip:
+        name:
+          - molecule
+          - molecule-plugins
+        virtualenv: ~/.venv/molecule
+        virtualenv_command: 'python3 -m venv'

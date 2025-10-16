@@ -1,0 +1,26 @@
+---
+- name: Verify dotfiles role
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Check if dotfiles directory exists
+      ansible.builtin.stat:
+        path: "{{ ansible_env.HOME }}/dotfiles"
+      register: dotfiles_dir
+
+    - name: Assert dotfiles directory exists
+      ansible.builtin.assert:
+        that:
+          - dotfiles_dir.stat.exists
+          - dotfiles_dir.stat.isdir
+
+    - name: Check if .git directory exists in dotfiles
+      ansible.builtin.stat:
+        path: "{{ ansible_env.HOME }}/dotfiles/.git"
+      register: dotfiles_git_dir
+
+    - name: Assert .git directory exists in dotfiles
+      ansible.builtin.assert:
+        that:
+          - dotfiles_git_dir.stat.exists
+          - dotfiles_git_dir.stat.isdir
