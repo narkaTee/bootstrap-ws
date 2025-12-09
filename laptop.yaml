@@ -14,6 +14,7 @@
           - shellcheck
           - podman
           - podman-compose
+          - direnv
 
 - name: Setup with local user
   hosts: laptop_user
