@@ -1,0 +1,13 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Check required packages are installed
+      ansible.builtin.package_facts:
+
+    - name: Verify 1password is installed
+      ansible.builtin.assert:
+        that:
+          - "'1password' in ansible_facts.packages"
+        fail_msg: "1password package not found"

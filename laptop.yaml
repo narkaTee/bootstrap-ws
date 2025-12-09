@@ -21,6 +21,7 @@
     - fonts
     - dotfiles
     - user_setup
+    - onepassword
 
   tasks:
     - name: Enable podman socket for user
