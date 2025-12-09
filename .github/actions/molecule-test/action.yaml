@@ -1,0 +1,34 @@
+name: "Molecule tests"
+
+inputs:
+  path:
+    description: 'The workding directory to run molecule in'
+    required: true
+    type: string
+
+runs:
+  using: composite
+  steps:
+    - name: Install Podman
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install podman
+
+    - name: Set up python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies.
+      shell: bash
+      run: pip3 install ansible molecule molecule-plugins[podman]
+
+    - name: Install ansible collections
+      shell: bash
+      run: ansible-galaxy install -r requirements.yaml
+
+    - name: Run molecule tests
+      shell: bash
+      run: molecule test
+      working-directory: ${{ inputs.path }}

@@ -1,0 +1,37 @@
+name: Molecule Discovery
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  discover-molecule-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      roles: "${{ steps.discover.outputs.roles }}"
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Discover roles with molecule tests
+        id: discover
+        run: |
+          roles=$(find roles -maxdepth 1 -type d -exec test -d "{}/molecule" \; -print | jq -R . | jq -Mcs .)
+          echo "Found roles with molecule tests: $roles"
+          echo "roles=$roles" >> $GITHUB_OUTPUT
+
+  molecule-tests:
+    needs: discover-molecule-tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        role: "${{ fromJson(needs.discover-molecule-tests.outputs.roles) }}"
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run Molecule tests
+        uses: ./.github/actions/molecule-test
+        with:
+          path: ${{ matrix.role }}
