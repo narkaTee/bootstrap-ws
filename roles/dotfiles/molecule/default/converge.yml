@@ -4,7 +4,7 @@
   any_errors_fatal: true
   module_defaults:
     package:
-      cache_valid_time: 3600
+      update_cache: true
   tasks:
     - name: "Include dotfiles role"
       include_role:
