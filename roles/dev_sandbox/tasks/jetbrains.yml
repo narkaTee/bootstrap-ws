@@ -1,0 +1,15 @@
+- name: Install JetBrains IDE backend dependencies
+  become: true
+  ansible.builtin.package:
+    name:
+      - default-jre
+
+      # Headless rendering dependencies
+      - libxrender1
+      - libxtst6
+      - libxi6
+      - fontconfig
+
+      # Process utilities
+      - procps
+      - lsof

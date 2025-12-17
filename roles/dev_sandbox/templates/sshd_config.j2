@@ -1,0 +1,25 @@
+# Custom sshd_config for non-root execution
+Port 2222
+HostKey /home/{{ dev_sandbox_user }}/.ssh/host_keys/ssh_host_rsa_key
+HostKey /home/{{ dev_sandbox_user }}/.ssh/host_keys/ssh_host_ecdsa_key
+HostKey /home/{{ dev_sandbox_user }}/.ssh/host_keys/ssh_host_ed25519_key
+
+PidFile /home/{{ dev_sandbox_user }}/.ssh/sshd/sshd.pid
+
+PermitRootLogin no
+PasswordAuthentication no
+PubkeyAuthentication yes
+AuthorizedKeysFile /home/{{ dev_sandbox_user }}/.ssh/authorized_keys
+
+AllowUsers {{ dev_sandbox_user }}
+UsePAM yes
+
+# Logging
+LogLevel INFO
+
+# Security
+X11Forwarding no
+PrintMotd no
+AcceptEnv LANG LC_*
+
+Subsystem sftp /usr/lib/openssh/sftp-server

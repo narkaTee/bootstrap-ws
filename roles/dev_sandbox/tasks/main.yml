@@ -1,0 +1,68 @@
+---
+- name: Install openssh-server
+  become: true
+  ansible.builtin.package:
+    name: openssh-server
+    state: present
+
+- name: Create dev user
+  become: true
+  ansible.builtin.user:
+    name: "{{ dev_sandbox_user }}"
+    shell: /bin/zsh
+    create_home: true
+    groups: "{{ dev_sandbox_groups }}"
+  when: dev_sandbox_create_user
+
+- name: Create .ssh directory for dev user
+  become: true
+  ansible.builtin.file:
+    path: "/home/{{ dev_sandbox_user }}/.ssh"
+    state: directory
+    owner: "{{ dev_sandbox_user }}"
+    group: "{{ dev_sandbox_user }}"
+    mode: '0700'
+  when: dev_sandbox_create_user
+
+- name: Create host keys directory for dev user
+  become: true
+  ansible.builtin.file:
+    path: "/home/{{ dev_sandbox_user }}/.ssh/host_keys"
+    state: directory
+    owner: "{{ dev_sandbox_user }}"
+    group: "{{ dev_sandbox_user }}"
+    mode: '0700'
+
+- name: Generate SSH host keys for non-root sshd
+  become: true
+  become_user: "{{ dev_sandbox_user }}"
+  ansible.builtin.command:
+    cmd: >
+      ssh-keygen -t {{ item.type }}
+        -f /home/{{ dev_sandbox_user }}/.ssh/host_keys/ssh_host_{{ item.type }}_key -N ''
+    creates: "/home/{{ dev_sandbox_user }}/.ssh/host_keys/ssh_host_{{ item.type }}_key"
+  loop:
+    - { type: 'rsa' }
+    - { type: 'ecdsa' }
+    - { type: 'ed25519' }
+
+- name: Create privilege separation directory for non-root sshd
+  become: true
+  ansible.builtin.file:
+    path: "/home/{{ dev_sandbox_user }}/.ssh/sshd"
+    state: directory
+    owner: "{{ dev_sandbox_user }}"
+    group: "{{ dev_sandbox_user }}"
+    mode: '0755'
+
+- name: Create custom sshd_config for non-root execution
+  become: true
+  ansible.builtin.template:
+    src: sshd_config.j2
+    dest: "/home/{{ dev_sandbox_user }}/.ssh/sshd_config"
+    owner: "{{ dev_sandbox_user }}"
+    group: "{{ dev_sandbox_user }}"
+    mode: '0644'
+
+- name: Prepare for JetBrains tools
+  include_tasks: jetbrains.yml

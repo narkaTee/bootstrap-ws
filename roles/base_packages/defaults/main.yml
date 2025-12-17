@@ -3,6 +3,7 @@ base_packages_default:
   - vim
   - tmux
   - zsh
+  - fzf
   - git
   - direnv
   - shellcheck

@@ -1,0 +1,30 @@
+---
+- name: Provision sandbox container
+  hosts: sandbox
+  roles:
+    - role: base_packages
+      vars:
+        base_packages_extra:
+          - ansible-lint
+          - ruby
+          - default-jdk
+
+    - role: dev_sandbox
+      vars:
+        dev_sandbox_create_user: true
+
+    - role: dotfiles
+      become: true
+      become_user: "{{ dev_sandbox_user }}"
+      vars:
+        dotfiles_ssh: false
+        dotfiles_dir: "/home/{{ dev_sandbox_user }}/dotfiles"
+
+  tasks:
+    - name: Set workspace ownership
+      ansible.builtin.file:
+        path: "/home/{{ dev_sandbox_user }}/workspace"
+        state: directory
+        owner: "{{ dev_sandbox_user }}"
+        group: "{{ dev_sandbox_user }}"
+        mode: '0755'

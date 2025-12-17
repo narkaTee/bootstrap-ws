@@ -3,3 +3,6 @@ profile: moderate
 
 skip_list:
   - role-name
+
+exclude_paths:
+  - .github/
