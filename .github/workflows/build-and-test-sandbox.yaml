@@ -1,0 +1,73 @@
+name: Build and Test Sandbox Container
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_call:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - platform: linux/amd64
+            tag_suffix: amd64
+          - platform: linux/arm64
+            tag_suffix: arm64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image for testing
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: sandbox:test-${{ matrix.tag_suffix }}
+          file: ./Containerfile-sandbox
+          platforms: ${{ matrix.platform }}
+          cache-from: |
+            type=gha,scope=${{ github.ref }}
+            type=gha,scope=refs/heads/main
+          cache-to: type=gha,scope=${{ github.ref }},mode=max
+
+      - name: Test - Verify entrypoint is executable
+        run: |
+          docker run --rm --platform ${{ matrix.platform }} --entrypoint="" \
+            sandbox:test-${{ matrix.tag_suffix }} test -x /entrypoint.sh
+
+      - name: Test - Entrypont updates authorized keys
+        run: |
+          docker run --rm --platform ${{ matrix.platform }} \
+            -e "SANDBOX_SSH_KEYS=$(echo "test" | base64 -w0)" sandbox:test-${{ matrix.tag_suffix }} \
+            sh -c 'test "$(cat /home/dev/.ssh/authorized_keys)" = "test"'
+
+      - name: Test - Verify Ansible playbook ran
+        run: |
+          echo "Testing sandbox container..."
+          docker run --rm --platform ${{ matrix.platform }} \
+            sandbox:test-${{ matrix.tag_suffix }} which ansible
+          docker run --rm --platform ${{ matrix.platform }} \
+            sandbox:test-${{ matrix.tag_suffix }} which sudo
+          docker run --rm --platform ${{ matrix.platform }} \
+            sandbox:test-${{ matrix.tag_suffix }} which python3
+          docker run --rm --platform ${{ matrix.platform }} \
+            sandbox:test-${{ matrix.tag_suffix }} test -d "/home/dev/dotfiles"
+          docker run --rm --platform ${{ matrix.platform }} \
+            sandbox:test-${{ matrix.tag_suffix }} test -f "/home/dev/.zshrc"
+          docker run --rm --platform ${{ matrix.platform }} \
+            sandbox:test-${{ matrix.tag_suffix }} test -f "/home/dev/.bashrc"
+
+      - name: Test - Verify dev user exists
+        run: |
+          docker run --rm --platform ${{ matrix.platform }} \
+            sandbox:test-${{ matrix.tag_suffix }} id dev

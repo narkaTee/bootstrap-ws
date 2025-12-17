@@ -1,0 +1,6 @@
+---
+# User configuration
+sandbox_dev_user: dev
+sandbox_dev_create_user: true
+sandbox_dev_groups:
+  - sudo

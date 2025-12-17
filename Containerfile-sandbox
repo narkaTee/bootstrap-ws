@@ -1,0 +1,35 @@
+ARG BASE_IMAGE=debian:trixie@sha256:2c70fdf986c223f457dc4abe69eeb8f6e10d3935ed32e9c2899a7f97d2dfc6b3
+FROM ${BASE_IMAGE}
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ansible \
+        python3 \
+        sudo \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /tmp/ansible
+COPY ansible.cfg .
+COPY requirements.yaml .
+COPY roles/ roles/
+COPY sandbox/sandbox.yaml .
+COPY sandbox/inventory/ inventory/
+
+RUN ansible-galaxy collection install -r requirements.yaml
+
+RUN ansible-playbook sandbox.yaml
+
+RUN rm -rf /tmp/ansible && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY sandbox/entrypoint.sh /entrypoint.sh
+
+USER dev
+WORKDIR /workspace
+
+EXPOSE 22
+USER root
+ENTRYPOINT ["/entrypoint.sh"]

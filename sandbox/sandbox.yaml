@@ -1,0 +1,48 @@
+---
+- name: Provision sandbox container
+  hosts: sandbox
+  vars:
+    # Override in inventory or via -e flag
+    sandbox_dev_user: dev
+    sandbox_dev_authorized_keys: []
+
+  roles:
+    - role: base-packages
+      vars:
+        base_packages_extra:
+          - ansible-lint
+          - ruby
+
+    - role: sandbox-dev
+      vars:
+        sandbox_dev_create_user: true
+
+    - role: dotfiles
+      become: true
+      become_user: "{{ sandbox_dev_user }}"
+      vars:
+        dotfiles_ssh: false
+        dotfiles_dir: "/home/{{ sandbox_dev_user }}/dotfiles"
+
+  tasks:
+    - name: Allow dev user to run some commands
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers.d/dev-apt
+        line: >-
+          {{ sandbox_dev_user }} ALL=(ALL) NOPASSWD:
+          /usr/bin/apt,
+          /usr/bin/apt-get,
+          /usr/bin/apt-cache,
+          /usr/bin/dpkg,
+          /usr/bin/dpkg-query
+        create: true
+        mode: '0440'
+        validate: 'visudo -cf %s'
+
+    - name: Set workspace ownership
+      ansible.builtin.file:
+        path: /workspace
+        state: directory
+        owner: "{{ sandbox_dev_user }}"
+        group: "{{ sandbox_dev_user }}"
+        mode: '0755'
