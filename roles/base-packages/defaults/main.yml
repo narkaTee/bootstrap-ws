@@ -1,0 +1,17 @@
+---
+base_packages:
+  - vim
+  - tmux
+  - zsh
+  - git
+  - direnv
+  - shellcheck
+  - jq
+  - curl
+  - wget
+  - unzip
+  - python3
+  - python3-venv
+  - python3-pip
+
+base_packages_extra: []
