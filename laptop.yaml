@@ -4,17 +4,12 @@
   roles:
     - role: yubikey
     - role: firefox
-  tasks:
-    - name: Basic packages
-      ansible.builtin.package:
-        name:
-          - vim
-          - tmux
+    - role: base_packages
+      vars:
+        base_packages_extra:
           - ansible-lint
-          - shellcheck
           - podman
           - podman-compose
-          - direnv
           # kvm
           - qemu-system
           - libvirt-daemon-system

@@ -1,0 +1,13 @@
+---
+- name: Install base packages
+  become: true
+  ansible.builtin.package:
+    name: "{{ base_packages_default }}"
+    state: present
+
+- name: Install additional packages
+  become: true
+  ansible.builtin.package:
+    name: "{{ base_packages_extra }}"
+    state: present
+  when: base_packages_extra | length > 0
