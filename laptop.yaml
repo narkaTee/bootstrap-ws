@@ -15,6 +15,10 @@
           - podman
           - podman-compose
           - direnv
+          # kvm
+          - qemu-system
+          - libvirt-daemon-system
+          - virt-manager
 
 - name: Setup with local user
   hosts: laptop_user
@@ -46,3 +50,10 @@
           - molecule-plugins
         virtualenv: ~/.venv/molecule
         virtualenv_command: 'python3 -m venv'
+
+    - name: Add user to the libvirt group to enable VM management
+      become: true
+      ansible.builtin.user:
+        name: "{{ ansible_user_id }}"
+        append: true
+        groups: libvirt
