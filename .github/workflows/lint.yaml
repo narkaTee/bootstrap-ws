@@ -29,3 +29,18 @@ jobs:
         run: |
           yamllint .
           ansible-lint
+
+  lint-containerfile:
+    name: Lint Containerfile
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Containerfile-sandbox
+          failure-threshold: warning
