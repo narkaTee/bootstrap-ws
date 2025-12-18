@@ -8,4 +8,3 @@
     - name: "Include 1password role"
       include_role:
         name: "../../../onepassword"
-
