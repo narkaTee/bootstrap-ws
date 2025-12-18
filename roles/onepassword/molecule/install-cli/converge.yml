@@ -1,0 +1,11 @@
+---
+- name: Run role
+  hosts: all
+  any_errors_fatal: true
+  vars:
+    onepassword_install_cli: true
+  tasks:
+    - name: "Include 1password role"
+      include_role:
+        name: "../../../onepassword"
+

@@ -5,15 +5,25 @@
 - name: Set 1password installed fact
   set_fact:
     onepassword_installed: "{{ '1password' in ansible_facts.packages }}"
+    onepassword_cli_installed: "{{ '1password-cli' in ansible_facts.packages }}"
   tags: "1password"
 
-- name: Install 1Password
+- name: Install 1Password .deb package
   when: not onepassword_installed
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+    deb: https://downloads.1password.com/linux/debian/amd64/stable/1password-latest.deb
+    state: present
   tags: "1password"
-  block:
-    - name: Install 1Password .deb package
-      become: true
-      ansible.builtin.apt:
-        update_cache: true
-        deb: https://downloads.1password.com/linux/debian/amd64/stable/1password-latest.deb
-        state: present
+
+- name: Install 1password-cli package
+  when:
+    - not onepassword_cli_installed
+    - onepassword_install_cli
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+    name: 1password-cli
+    state: present
+  tags: "1password"
