@@ -12,8 +12,8 @@
           - "'1password' in ansible_facts.packages"
         fail_msg: "1password package not found"
 
-    - name: Verify 1password-cli is not installed
+    - name: Verify 1password-cli is installed
       ansible.builtin.assert:
         that:
-          - "'1password-cli' not in ansible_facts.packages"
-        fail_msg: "1password-cli package found, it should not be installed without explicit request"
+          - "'1password-cli' in ansible_facts.packages"
+        fail_msg: "1password-cli package not found"
