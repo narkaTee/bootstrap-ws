@@ -1,24 +1,14 @@
 name: Build and Push Sandbox Container
 
 on:
-  push:
-    branches:
-      - main
+  workflow_call:
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository_owner }}/sandbox-container
 
 jobs:
-  lint:
-    uses: ./.github/workflows/lint.yaml
-
-  build-and-test:
-    needs: lint
-    uses: ./.github/workflows/build-and-test-sandbox.yaml
-
-  push:
-    needs: build-and-test
+  build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
