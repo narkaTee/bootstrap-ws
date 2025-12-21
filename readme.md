@@ -3,7 +3,26 @@
 ```
 git clone https://github.com/narkaTee/bootstrap-ws.git
 cd bootstrap-ws
+# you should check what secret settings you want to make
+vim inventory/group_vars/laptop.yaml
 ./setup-laptop.sh
+```
+
+## SSH Config
+
+The runbook sets up a `~/.ssh/config.d/` folder where configurations can be dropped
+
+To put a `additional-config.conf` into that folder edit `inventory/group_vars/laptop.yaml`
+
+```
+ssh_additional_config:
+  - |
+    Host my-trusted-host
+        User user
+        ForwardAgent yes
+  - |
+    Host another-host
+        User anotheruser
 ```
 
 ## yubikey

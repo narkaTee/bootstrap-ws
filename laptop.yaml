@@ -54,3 +54,33 @@
         name: "{{ ansible_user_id }}"
         append: true
         groups: libvirt
+
+    - name: Create .ssh directory for user
+      ansible.builtin.file:
+        path: "~/.ssh"
+        state: directory
+        mode: '0700'
+
+    - name: Create .ssh/config.d/ directory for user
+      ansible.builtin.file:
+        path: "~/.ssh/config.d"
+        state: directory
+        mode: '0700'
+
+    - name: Configure ssh config
+      ansible.builtin.copy:
+        dest: "~/.ssh/config"
+        content: |
+          # Desktop Apps will not see the SSH_AUTH_SOCK from the dotfiles
+          Host *
+              IdentityAgent ~/.1password/agent.sock
+
+          Include ~/.ssh/config.d/*
+        mode: '0600'
+
+    - name: Additional ssh config snippets
+      ansible.builtin.copy:
+        dest: "~/.ssh/config.d/additional-config.conf"
+        content: |
+          {{ ssh_additional_config | join('\n\n') }}
+        mode: '0600'
