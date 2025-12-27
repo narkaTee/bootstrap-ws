@@ -42,5 +42,5 @@ jobs:
       - name: Run Hadolint
         uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Containerfile-sandbox
+          dockerfile: ./sandbox/Containerfile
           failure-threshold: warning
