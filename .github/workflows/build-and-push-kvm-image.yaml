@@ -1,0 +1,144 @@
+name: Build and Push KVM Image
+
+on:
+  workflow_call:
+    outputs:
+      image_tag:
+        description: 'The tag of the pushed image'
+        value: ${{ jobs.build-and-push.outputs.image_tag }}
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  # the repo name must be all lowercase, while the docker actions make sure to lowercase the repo path we need to do this ourselves here
+  # there is no easy way to lowercase ${{ github.repository_owner }} with github actions build-in functions.
+  # hardcoding it is 🤷
+  IMAGE_NAME: narkatee/sandbox-kvm-image
+  CACHE_DIR: "./sandbox/cache/"
+  # Debugging options
+  LIBGUESTFS_DEBUG: 0
+  LIBGUESTFS_TRACE: 0
+
+jobs:
+  build-and-push:
+    # https://github.com/libguestfs/libguestfs/issues/170
+    # 24.04 is borked,
+    # disabling app armor seems not to work correctly in github actions? Or I did it wrong
+    runs-on: ubuntu-22.04
+    outputs:
+      image_tag: ${{ steps.version.outputs.tag }}
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libguestfs-tools qemu-utils curl jq # oras
+          # oras is only avilable since ubuntu 25.10 and not on the lts versions github uses.
+
+      - name: Install oras
+        uses: oras-project/setup-oras@v1
+
+      - name: Restore image checksums from cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            ${{ env.CACHE_DIR }}/SHA512SUMS
+          key: debian-img-checksums
+
+      - name: Update debian image checksums
+        id: debian
+        run: |
+          mkdir -p "$CACHE_DIR"
+          curl -s \
+            -o "$CACHE_DIR/SHA512SUMS" \
+            -z "$CACHE_DIR/SHA512SUMS" \
+            https://cloud.debian.org/images/cloud/trixie/latest/SHA512SUMS
+          DEBIAN_HASH=$(grep 'debian-13-nocloud-amd64.qcow2' "$CACHE_DIR/SHA512SUMS" | awk '{print $1}')
+          DEBIAN_HASH_SHORT=$(echo "$DEBIAN_HASH" | head -c 12)
+          echo "hash=$DEBIAN_HASH" >> $GITHUB_OUTPUT
+          echo "hash_short=$DEBIAN_HASH_SHORT" >> $GITHUB_OUTPUT
+          echo "Debian upstream hash: $DEBIAN_HASH"
+
+      - name: Restore image and checksums from cache
+        id: cache_base
+        uses: actions/cache@v5
+        with:
+          path: |
+            ${{ env.CACHE_DIR }}/debian-13-nocloud-amd64.qcow2
+          key: debian-img-${{ steps.debian.outputs.hash }}
+
+      - name: Generate version tag
+        id: version
+        run: |
+          DEBIAN_HASH_SHORT="${{ steps.debian.outputs.hash_short }}"
+          GIT_HASH=$(git rev-parse --short HEAD)
+          TAG="debian-${DEBIAN_HASH_SHORT}-g${GIT_HASH}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Generated tag: $TAG"
+
+      - name: Download base image if cache miss
+        if: steps.cache_base.outputs.cache-hit != 'true'
+        run: |
+          curl -L -o "$CACHE_DIR/debian-13-nocloud-amd64.qcow2" \
+            https://cloud.debian.org/images/cloud/trixie/latest/debian-13-nocloud-amd64.qcow2
+
+          cd $CACHE_DIR
+          sha512sum -c <(grep 'debian-13-nocloud-amd64.qcow2' SHA512SUMS)
+          cd ..
+
+      # For some reason the kernel is not readable by the runner user by default
+      - name: Allow read acces to the kernel so libguestfs can use it
+        run: |
+          sudo chmod +r /boot/vmlinuz-*
+
+      - name: Build KVM image
+        run: |
+          sudo aa-teardown || true
+          sudo systemctl disable --now apparmor.service
+          time bash sandbox/kvm-sandbox-build.sh
+
+      - name: Verify build artifacts
+        run: |
+          echo "Build artifacts:"
+          ls -slh $CACHE_DIR/
+          test -f $CACHE_DIR/debian-13-nocloud-amd64-custom.qcow2 || { echo "Custom image not found"; exit 1; }
+          qemu-img info $CACHE_DIR/debian-13-nocloud-amd64-custom.qcow2
+
+      - name: Log in to Container Registry
+        run:
+          echo "${{ secrets.GITHUB_TOKEN }}" | oras login "${{ env.REGISTRY }}" -u "${{ github.actor }}" --password-stdin
+
+      - name: Push to GHCR
+        id: push
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          QCOW2_SIZE=$(du -h $CACHE_DIR/debian-13-nocloud-amd64-custom.qcow2 | cut -f1)
+
+          echo "Pushing KVM image artifacts to GHCR..."
+          cd "$CACHE_DIR"
+          # We need to compress the image, oci blobs are "just streams of bytes", this inflates sparse images
+          # to their maximum size. To work around this we'll compress the disk image before upload.
+          # This has the neat side effect of making the image even smaller.
+          # compression level 10 gives the best values for cost vs compression
+          zstd -T0 -10 debian-13-nocloud-amd64-custom.qcow2
+          oras push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$TAG \
+            debian-13-nocloud-amd64-custom.qcow2.zst:application/vnd.qemu.qcow2+zstd \
+            --annotation "org.opencontainers.image.created=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            --annotation "org.opencontainers.image.revision=${{ github.sha }}" \
+            --annotation "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+            --annotation "debian.upstream.hash=${{ steps.debian.outputs.hash }}" \
+            --annotation "build.git.commit=${{ github.sha }}" \
+
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            oras tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$TAG latest
+            echo "Tagged: latest"
+          fi
+
+          echo "pushed=true" >> $GITHUB_OUTPUT
+          echo "Successfully pushed: $TAG (qcow2: $QCOW2_SIZE)"

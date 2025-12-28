@@ -1,0 +1,67 @@
+name: Scheduled KVM Image Check
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: narkatee/sandbox-kvm-image
+  CACHE_DIR: "./sandbox/cache/"
+
+jobs:
+  check-if-update-needed:
+    name: Check if there is a different upstream release available.
+    runs-on: ubuntu-latest
+    outputs:
+      update_needed: ${{ steps.check.outputs.update_needed }}
+    steps:
+      - name: Restore image checksums from cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            ${{ env.CACHE_DIR }}/SHA512SUMS
+          key: debian-img-checksums
+
+      - name: Update debian image checksums
+        id: debian
+        run: |
+          mkdir -p "$CACHE_DIR"
+          curl -s \
+            -o "$CACHE_DIR/SHA512SUMS" \
+            -z "$CACHE_DIR/SHA512SUMS" \
+            https://cloud.debian.org/images/cloud/trixie/latest/SHA512SUMS
+          DEBIAN_HASH=$(grep 'debian-13-nocloud-amd64.qcow2' "$CACHE_DIR/SHA512SUMS" | awk '{print $1}')
+          DEBIAN_HASH_SHORT=$(echo "$DEBIAN_HASH" | head -c 12)
+          echo "hash=$DEBIAN_HASH" >> $GITHUB_OUTPUT
+          echo "Debian upstream hash: $DEBIAN_HASH"
+
+      - name: Install oras
+        uses: oras-project/setup-oras@v1
+
+      - name: Check if update is needed
+        id: check
+        run: |
+          upstream_hash="${{ steps.debian.outputs.hash }}"
+          image_hash="$(oras manifest fetch "${REGISTRY}/${IMAGE_NAME}:latest" | jq -r '.annotations["debian.upstream.hash"]')"
+          if [ "$upstream_hash" != "$image_hash" ]; then
+            echo "Upstream hash ($upstream_hash) is different from latest image hash ($image_hash). Update needed."
+            echo "update_needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "No update needed. Upstream hash matches latest image hash ($image_hash)."
+            echo "update_needed=false" >> $GITHUB_OUTPUT
+          fi
+
+  build-kvm-image:
+    name: Check and Build KVM Image
+    needs: check-if-update-needed
+    if: needs.check-if-update-needed.outputs.update_needed == 'true'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/build-and-push-kvm-image.yaml

@@ -9,6 +9,91 @@ on:
       - main
 
 jobs:
+  # Detect which files changed
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      kvm: ${{ steps.changes.outputs.kvm }}
+      container: ${{ steps.changes.outputs.container }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # we need full histrory for the change detection
+          fetch-depth: 0
+
+      - name: Check for changes
+        id: changes
+        run: |
+          SANDBOX_PATHS=(
+            "sandbox/inventory"
+            "sandbox/sandbox.yaml"
+            "roles/base_packages"
+            "roles/dev_sandbox"
+            "roles/dotfiles"
+            "ansible.cfg"
+            "requirements.yaml"
+            "sandbox/pre-warm-tools.sh"
+          )
+          CONTAINER_PATHS=(
+            "${SANDBOX_PATHS[@]}"
+            "container/sandbox/Containerfile"
+            "container/sandbox/entrypoint.sh"
+            ".github/workflows/build-and-test-sandbox.yaml"
+            ".github/workflows/build-and-push-sandbox.yaml"
+          )
+          KVM_PATHS=(
+            "${SANDBOX_PATHS[@]}"
+            "sandbox/kvm-sandbox-build.sh"
+            "sandbox/kvm-sandbox-customize.sh"
+            ".github/workflows/build-and-push-kvm-image.yaml"
+          )
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+          fi
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          echo ""
+
+          KVM_CHANGED=false
+          CONTAINER_CHANGED=false
+          for changed_file in $CHANGED_FILES; do
+            for watch_path in "${CONTAINER_PATHS[@]}"; do
+              # Check if changed file starts with watch path
+              if [[ "$changed_file" == "$watch_path"* ]]; then
+                echo "Container-related file changed: $changed_file (matches $watch_path)"
+                CONTAINER_CHANGED=true
+                break
+              fi
+            done
+
+            for watch_path in "${KVM_PATHS[@]}"; do
+              # Check if changed file starts with watch path
+              if [[ "$changed_file" == "$watch_path"* ]]; then
+                echo "KVM-related file changed: $changed_file (matches $watch_path)"
+                KVM_CHANGED=true
+                break 2
+              fi
+            done
+          done
+
+          if [ "$KVM_CHANGED" = "true" ]; then
+            echo "kvm=true" >> $GITHUB_OUTPUT
+          else
+            echo "kvm=false" >> $GITHUB_OUTPUT
+            echo "No KVM-related files changed"
+          fi
+          if [ "$CONTAINER_CHANGED" = "true" ]; then
+            echo "container=true" >> $GITHUB_OUTPUT
+          else
+            echo "container=false" >> $GITHUB_OUTPUT
+            echo "No Container-related files changed"
+          fi
+
   lint:
     name: Lint
     uses: ./.github/workflows/lint.yaml
@@ -17,18 +102,38 @@ jobs:
     name: Molecule Tests
     uses: ./.github/workflows/molecule-discovery.yaml
 
-  build-and-test:
+  build-and-test-container:
     name: Build and Test Container
     needs:
       - molecule
       - lint
+      - changes
+    if: |
+      needs.changes.outputs.container == 'true'
     uses: ./.github/workflows/build-and-test-sandbox.yaml
 
-  publish:
-    name: Build and Publish Container
-    needs: build-and-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  publish-sandbox-container:
+    name: Build and Publish sandbox Container
+    needs: build-and-test-container
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
     permissions:
       contents: read
       packages: write
     uses: ./.github/workflows/build-and-push-sandbox.yaml
+
+  publish-sandbox-kvm-image:
+    name: Build and Publish KVM sandbox Image
+    needs:
+      - molecule
+      - lint
+      - changes
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.changes.outputs.kvm == 'true'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/build-and-push-kvm-image.yaml

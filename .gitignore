@@ -1,6 +1,7 @@
 *.swp
 .cache/*
 !.cache/.keep
+sandbox/cache/
 
 __pycache__/
 ansible_collections/
