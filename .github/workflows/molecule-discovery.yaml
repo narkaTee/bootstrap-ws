@@ -2,6 +2,10 @@ name: Molecule Discovery
 on:
   workflow_call:
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   discover-molecule-tests:
     runs-on: ubuntu-latest

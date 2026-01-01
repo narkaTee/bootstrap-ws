@@ -3,6 +3,10 @@ name: Build and Test Sandbox Container
 on:
   workflow_call:
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest

@@ -8,6 +8,10 @@ on:
         value: ${{ jobs.build-and-push.outputs.image_tag }}
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: bash
+
 env:
   REGISTRY: ghcr.io
   # the repo name must be all lowercase, while the docker actions make sure to lowercase the repo path we need to do this ourselves here
