@@ -52,6 +52,22 @@ RemainAfterExit=true
 WantedBy=multi-user.target
 EOF
 
+cat > /etc/systemd/system/dev-workspace.mount << 'EOF'
+[Unit]
+Description=Dev workspace mount
+After=network.target
+
+[Mount]
+What=workspace
+Where=/home/dev/workspace
+Type=9p
+Options=trans=virtio
+TimeoutSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 cat > /etc/systemd/system/dev-sshd.service << 'EOF'
 [Unit]
 Description=OpenSSH server for dev user
@@ -72,4 +88,5 @@ EOF
 
 systemctl daemon-reload
 systemctl enable dev-sshd.service
+systemctl enable dev-workspace.mount
 systemctl enable dev-ssh-keys.service
