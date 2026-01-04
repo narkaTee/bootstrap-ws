@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+if [[ -t 0 ]]; then
+    # stdin is a tty, must be an interactive session
+    echo -n "Checking dotfiles... "
+    timeout 30s /usr/local/bin/dotfiles-updater
+    echo "Done!"
+fi
+
+exec /bin/zsh "$@"

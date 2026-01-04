@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DOTDIR="/home/dev/dotfiles"
+LOGFILE="/home/dev/.dotfiles-update.log"
+MARKER="/home/dev/.dotfiles-checked"
+
+timestamp() {
+    date -u +"%Y-%m-%dT%H:%M:%S"
+}
+
+log() {
+    echo "$(timestamp) - $*" >>"$LOGFILE"
+}
+
+remote_and_local_head_match() {
+    local local_head
+    local remote_head
+
+    local_head=$(git rev-parse "HEAD")
+    if remote_head="$(git rev-parse --verify "HEAD@{upstream}")" >>"$LOGFILE" 2>&1; then
+        if [[ "$local_head" = "$remote_head" ]]; then
+            return 0
+        else
+            return 1
+        fi
+    else
+        log "There was a problem determinating the remote hash..."
+        exit 1
+    fi
+}
+
+update() {
+    git pull --rebase >> "$LOGFILE" 2>&1
+    rake install >> "$LOGFILE" 2>&1
+}
+
+log "start"
+
+if [ "$(id -un)" != "dev" ]; then
+    log "not running as 'dev', exiting"
+    exit 0
+fi
+
+if [ -f "$MARKER" ]; then
+    log "updated marker present, nothing to do"
+    exit 0
+fi
+
+if [ ! -d "$DOTDIR/.git" ]; then
+    log "$DOTDIR missing or not a git repo"
+    exit 0
+fi
+
+cd "$DOTDIR"
+log "fetching updates"
+if ! git fetch --all --prune >>"$LOGFILE" 2>&1; then
+    log "git fetch failed"
+    exit 1
+fi
+
+if ! remote_and_local_head_match; then
+    log "changes detected, updating"
+    update
+fi
+
+touch "$MARKER"
+log "checked successfully"

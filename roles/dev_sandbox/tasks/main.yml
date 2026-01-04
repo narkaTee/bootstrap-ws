@@ -5,11 +5,23 @@
     name: openssh-server
     state: present
 
+- name: Copy scripts to /usr/local/bin
+  become: true
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/usr/local/bin"
+    owner: "root"
+    group: "root"
+    mode: '0755'
+  loop:
+    - scripts/dotfiles-updater
+    - scripts/dotfiles-updater-zsh-wrapper
+
 - name: Create dev user
   become: true
   ansible.builtin.user:
     name: "{{ dev_sandbox_user }}"
-    shell: /bin/zsh
+    shell: /usr/local/bin/dotfiles-updater-zsh-wrapper
     create_home: true
     groups: "{{ dev_sandbox_groups }}"
   when: dev_sandbox_create_user
