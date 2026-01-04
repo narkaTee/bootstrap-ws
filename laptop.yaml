@@ -10,10 +10,13 @@
           - ansible-lint
           - podman
           - podman-compose
+          - bubblewrap
+          - oras
           # kvm
           - qemu-system
           - libvirt-daemon-system
           - virt-manager
+          - guestfs-tools
 
 - name: Setup with local user
   hosts: laptop_user
