@@ -1,2 +1,2 @@
 #!/usr/bin/env sh
-ansible-playbook laptop.yaml -K $@
+ansible-playbook laptop.yaml -K "$@"

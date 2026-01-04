@@ -1,0 +1,5 @@
+external-sources=false
+
+# we are referencing a lot of not existing sources these checks just get in the way
+disable=SC1090
+disable=SC1091
