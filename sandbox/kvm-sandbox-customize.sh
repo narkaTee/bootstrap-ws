@@ -52,7 +52,7 @@ RemainAfterExit=true
 WantedBy=multi-user.target
 EOF
 
-cat > /etc/systemd/system/dev-workspace.mount << 'EOF'
+cat > /etc/systemd/system/home-dev-workspace.mount << 'EOF'
 [Unit]
 Description=Dev workspace mount
 After=network.target
@@ -88,5 +88,5 @@ EOF
 
 systemctl daemon-reload
 systemctl enable dev-sshd.service
-systemctl enable dev-workspace.mount
+systemctl enable home-dev-workspace.mount
 systemctl enable dev-ssh-keys.service
