@@ -80,6 +80,17 @@ install_items+=" /usr/bin/fido2-token "
 install_items+=" /usr/lib/udev/rules.d/60-fido-id.rules /usr/lib/udev/fido_id "
 ```
 
+# Sandbox builds
+
+## Sanbox container
+
+To test the build locally: `podman build -t sandbox:latest -f ./sandbox/Containerfile .`
+
+## KVM/qemu image
+
+To test the build locally just run: `./sandbox/kvm-sandbox-build.sh`
+The script will not work properly if run from the wrong working dir
+
 # pen test botstrapping
 
 # arch base install

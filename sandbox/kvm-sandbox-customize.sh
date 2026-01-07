@@ -20,7 +20,7 @@ dpkg-reconfigure --frontend noninteractive locales
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 ansible-galaxy collection install -r requirements.yaml
-ansible-playbook sandbox.yaml
+ansible-playbook -e dev_sandbox_enable_sudo=true sandbox.yaml
 cd ..
 rm -rf /root/ansible
 
@@ -37,6 +37,52 @@ EOF
 
 # disable sshd for root and enable a dedicated sshd for dev user like in the container
 systemctl disable sshd.service
+
+cat > /etc/systemd/system/update-hostname.service << 'EOF'
+[Unit]
+Description=Change host name based on QEMU fw_cfg value
+After=network.target
+ConditionPathExists=/sys/firmware/qemu_fw_cfg/by_name/opt/com.sandbox/hostname/raw
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c '/usr/bin/hostnamectl set-hostname "$(cat /sys/firmware/qemu_fw_cfg/by_name/opt/com.sandbox/hostname/raw)"'
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+cat > /usr/local/bin/setup-proxy-from-fwcfg.sh << 'SH'
+#!/usr/bin/env sh
+set -euo pipefail
+
+FWCFG=/sys/firmware/qemu_fw_cfg/by_name/opt/com.sandbox/proxy_env/raw
+OUT=/etc/profile.d/proxy.sh
+
+if [ -r "$FWCFG" ]; then
+    cat "$FWCFG" > "$OUT"
+    chmod 644 "$OUT"
+    echo ". /etc/profile.d/proxy.sh" >> /home/dev/.config/setup/env.local.sh
+    chown dev:dev /home/dev/.config/setup/env.local.sh
+fi
+SH
+chmod 755 /usr/local/bin/setup-proxy-from-fwcfg.sh
+
+cat > /etc/systemd/system/setup-proxy.service << 'EOF'
+[Unit]
+Description=Setup env vars for proxy usage if QEMU fw_cfg value is present
+After=network.target
+ConditionPathExists=/sys/firmware/qemu_fw_cfg/by_name/opt/com.sandbox/proxy_env/raw
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/setup-proxy-from-fwcfg.sh
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
 
 cat > /etc/systemd/system/dev-ssh-keys.service << 'EOF'
 [Unit]
@@ -87,6 +133,8 @@ WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
+systemctl enable update-hostname.service
+systemctl enable setup-proxy.service
 systemctl enable dev-sshd.service
 systemctl enable home-dev-workspace.mount
 systemctl enable dev-ssh-keys.service

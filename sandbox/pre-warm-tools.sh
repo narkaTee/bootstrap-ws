@@ -17,3 +17,8 @@ n install lts
 
 # pre install sdk man, yep that is quite sketchy but manually installing is complicated
 curl -s "https://get.sdkman.io?ci=true&rcupdate=false" | bash
+
+if sudo -n whoami &> /dev/null; then
+    # pre install linux brew
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi

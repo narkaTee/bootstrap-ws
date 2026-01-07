@@ -26,6 +26,14 @@
     groups: "{{ dev_sandbox_groups }}"
   when: dev_sandbox_create_user
 
+- name: Enable passwordless sudo for user dev
+  when: dev_sandbox_enable_sudo == 'true'
+  community.general.sudoers:
+    name: dev-nopassword
+    user: dev
+    commands: ALL
+    nopassword: true
+
 - name: Create .ssh directory for dev user
   become: true
   ansible.builtin.file:
