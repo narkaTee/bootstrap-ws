@@ -104,6 +104,9 @@ jobs:
       - name: Build KVM image
         run: |
           sudo aa-teardown || true
+          # Adding the pipeline user to the kvm group is not feasable, we cannot re-login.
+          # This could speed up the image build (at least libvirt states that it will)
+          sudo chmod 0666 /dev/kvm
           sudo systemctl disable --now apparmor.service
           time bash sandbox/kvm-sandbox-build.sh
 
