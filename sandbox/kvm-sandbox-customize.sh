@@ -57,14 +57,21 @@ cat > /usr/local/bin/setup-proxy-from-fwcfg.sh << 'SH'
 #!/usr/bin/env sh
 set -euo pipefail
 
-FWCFG=/sys/firmware/qemu_fw_cfg/by_name/opt/com.sandbox/proxy_env/raw
-OUT=/etc/profile.d/proxy.sh
+FWCFG=/sys/firmware/qemu_fw_cfg/by_name/opt/com.sandbox/proxy/raw
 
 if [ -r "$FWCFG" ]; then
-    cat "$FWCFG" > "$OUT"
-    chmod 644 "$OUT"
-    echo ". /etc/profile.d/proxy.sh" >> /home/dev/.config/setup/env.local.sh
-    chown dev:dev /home/dev/.config/setup/env.local.sh
+    proxy="$(cat "$FWCFG")"
+    cat >> /etc/environment << EOF
+HTTP_PROXY=$proxy
+HTTPS_PROXY=$proxy
+http_proxy=$proxy
+https_proxy=$proxy
+no_proxy="localhost,127.0.0.1"
+EOF
+
+    cat > /etc/apt/apt.conf.d/02proxy << PROXY_EOF
+Acquire::http::Proxy "$proxy";
+PROXY_EOF
 fi
 SH
 chmod 755 /usr/local/bin/setup-proxy-from-fwcfg.sh
@@ -73,7 +80,7 @@ cat > /etc/systemd/system/setup-proxy.service << 'EOF'
 [Unit]
 Description=Setup env vars for proxy usage if QEMU fw_cfg value is present
 After=network.target
-ConditionPathExists=/sys/firmware/qemu_fw_cfg/by_name/opt/com.sandbox/proxy_env/raw
+ConditionPathExists=/sys/firmware/qemu_fw_cfg/by_name/opt/com.sandbox/proxy/raw
 
 [Service]
 Type=oneshot
