@@ -50,6 +50,20 @@
         enabled: true
         state: started
 
+    # There are a bunch of ssh agents lined up start and be in the way
+    # Disable & mask them all
+    - name: Disable user ssh-agent service
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        scope: user
+        masked: true
+        state: stopped
+      loop:
+        - ssh-agent.service
+        - ssh-agent.socket
+        - gcr-ssh-agent.service
+        - gcr-ssh-agent.socket
+
     - name: Install python packages to create venv
       become: true
       ansible.builtin.package:
