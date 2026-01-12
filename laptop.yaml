@@ -12,6 +12,8 @@
           - podman-compose
           - bubblewrap
           - oras
+          - neovim
+          - neovim-qt
           # kvm
           - qemu-system
           - libvirt-daemon-system
