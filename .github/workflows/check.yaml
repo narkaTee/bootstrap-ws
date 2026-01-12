@@ -41,7 +41,7 @@ jobs:
           )
           CONTAINER_PATHS=(
             "${SANDBOX_PATHS[@]}"
-            "container/sandbox/Containerfile"
+            "container/sandbox/Dockerfile"
             "container/sandbox/entrypoint.sh"
             ".github/workflows/build-and-test-sandbox.yaml"
             ".github/workflows/build-and-push-sandbox.yaml"

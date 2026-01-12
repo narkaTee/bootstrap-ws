@@ -84,7 +84,7 @@ install_items+=" /usr/lib/udev/rules.d/60-fido-id.rules /usr/lib/udev/fido_id "
 
 ## Sanbox container
 
-To test the build locally: `podman build -t sandbox:latest -f ./sandbox/Containerfile .`
+To test the build locally: `podman build -t sandbox:latest -f ./sandbox/Dockerfile .`
 
 ## KVM/qemu image
 

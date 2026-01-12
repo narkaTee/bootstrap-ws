@@ -36,7 +36,7 @@ jobs:
           context: .
           load: true
           tags: sandbox:test-${{ matrix.tag_suffix }}
-          file: ./sandbox/Containerfile
+          file: ./sandbox/Dockerfile
           platforms: ${{ matrix.platform }}
           cache-from: |
             type=gha,scope=${{ github.ref }}
