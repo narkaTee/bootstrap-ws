@@ -3,6 +3,7 @@
   hosts: laptop
   roles:
     - role: yubikey
+    - role: workstation_hardening
     - role: firefox
     - role: base_packages
       vars:

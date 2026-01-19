@@ -1,0 +1,22 @@
+- name: Install ufw
+  become: true
+  ansible.builtin.package:
+    name: ufw
+
+- name: Enable UFW
+  become: true
+  community.general.ufw:
+    state: enabled
+
+# The default rules are already set up correctly on debian but we want to be explicit
+- name: Default deny input
+  become: true
+  community.general.ufw:
+    default: deny
+    direction: incoming
+
+- name: Default deny forward
+  become: true
+  community.general.ufw:
+    default: deny
+    direction: routed
