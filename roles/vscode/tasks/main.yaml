@@ -1,0 +1,18 @@
+---
+- name: Check for installed packages
+  ansible.builtin.package_facts:
+  tags: "vscode"
+
+- name: Set VSCode installed fact
+  set_fact:
+    vscode_installed: "{{ 'code' in ansible_facts.packages }}"
+  tags: "vscode"
+
+- name: Install VSCode .deb package
+  when: not vscode_installed
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+    deb: https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64
+    state: present
+  tags: "vscode"

@@ -1,0 +1,13 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Check required packages are installed
+      ansible.builtin.package_facts:
+
+    - name: Verify VSCode is installed
+      ansible.builtin.assert:
+        that:
+          - "'code' in ansible_facts.packages"
+        fail_msg: "VSCode (code) package not found"
