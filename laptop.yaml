@@ -44,6 +44,7 @@
     - role: onepassword
       vars:
         onepassword_install_cli: true
+    - kde_settings
 
   tasks:
     - name: Enable podman socket for user

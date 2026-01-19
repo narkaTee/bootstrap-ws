@@ -1,0 +1,4 @@
+---
+- name: Remind user to re-login
+  ansible.builtin.debug:
+    msg: "KDE settings have been changed. You may need to log out and log back in for all changes to take effect."
