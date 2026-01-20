@@ -53,6 +53,20 @@
     label: "{{ item.section }}/{{ item.option }}"
   notify: Remind user to re-login
 
+# Configure plasmashellrc (plasma shell settings)
+- name: Configure plasma shell settings
+  community.general.ini_file:
+    path: "{{ ansible_user_dir }}/.config/plasmashellrc"
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    ignore_spaces: true
+    mode: '0600'
+  loop: "{{ kde_settings_plasmashellrc_settings }}"
+  loop_control:
+    label: "{{ item.section }}/{{ item.option }}"
+  notify: Remind user to re-login
+
 # Configure plasma-org.kde.plasma.desktop-appletsrc (panel and taskbar settings)
 - name: Configure plasma desktop and panel settings
   community.general.ini_file:
@@ -63,6 +77,20 @@
     ignore_spaces: true
     mode: '0600'
   loop: "{{ kde_settings_plasma_appletsrc_settings }}"
+  loop_control:
+    label: "{{ item.section }}/{{ item.option }}"
+  notify: Remind user to re-login
+
+# Configure ksmserverrc (session manager settings)
+- name: Configure session manager settings
+  community.general.ini_file:
+    path: "{{ ansible_user_dir }}/.config/ksmserverrc"
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    ignore_spaces: true
+    mode: '0600'
+  loop: "{{ kde_settings_ksmserverrc_settings }}"
   loop_control:
     label: "{{ item.section }}/{{ item.option }}"
   notify: Remind user to re-login
