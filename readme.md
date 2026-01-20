@@ -1,6 +1,7 @@
 # laptop setup
 
 ```
+sudo apt install ansible -y
 git clone https://github.com/narkaTee/bootstrap-ws.git
 cd bootstrap-ws
 # you should check what secret settings you want to make
