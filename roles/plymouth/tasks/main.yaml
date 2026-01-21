@@ -1,0 +1,13 @@
+---
+- name: Install Plymouth packages
+  become: true
+  ansible.builtin.package:
+    name:
+      - plymouth-theme-breeze
+  register: plymouth_install_theme
+
+- name: Set default Plymouth theme to breeze
+  become: true
+  ansible.builtin.command:
+    cmd: plymouth-set-default-theme breeze
+  when: plymouth_install_theme.changed

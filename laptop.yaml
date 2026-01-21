@@ -5,6 +5,8 @@
     - role: yubikey
     - role: workstation_hardening
     - role: firefox
+    - role: vscode
+    - role: plymouth
     - role: base_packages
       vars:
         base_packages_extra:
