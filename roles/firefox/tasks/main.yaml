@@ -53,3 +53,9 @@
   ansible.builtin.package:
       name: firefox
   tags: ['firefox']
+
+- name: Remove firefox-esr
+  ansible.builtin.package:
+      name: firefox-esr
+      state: absent
+  tags: ['firefox']
