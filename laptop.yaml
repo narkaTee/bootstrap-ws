@@ -83,6 +83,7 @@
         name:
           - molecule
           - molecule-plugins
+          - molecule-plugins[podman]
         virtualenv: ~/.venv/molecule
         virtualenv_command: 'python3 -m venv'
 
