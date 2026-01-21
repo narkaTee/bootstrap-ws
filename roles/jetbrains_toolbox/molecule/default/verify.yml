@@ -1,0 +1,16 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Check if JetBrains Toolbox binary exists
+      ansible.builtin.stat:
+        path: "{{ ansible_user_dir }}/.local/share/JetBrains/Toolbox/bin/jetbrains-toolbox"
+      register: jetbrains_toolbox_binary
+
+    - name: Verify JetBrains Toolbox is installed
+      ansible.builtin.assert:
+        that:
+          - jetbrains_toolbox_binary.stat.exists
+          - jetbrains_toolbox_binary.stat.executable
+        fail_msg: "JetBrains Toolbox binary not found or not executable"

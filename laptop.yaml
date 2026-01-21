@@ -47,6 +47,7 @@
       vars:
         onepassword_install_cli: true
     - kde_settings
+    - jetbrains_toolbox
 
   tasks:
     - name: Enable podman socket for user
