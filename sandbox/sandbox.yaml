@@ -8,6 +8,7 @@
           - ansible-lint
           - ruby
           - default-jdk
+          - tmux
 
     - role: dev_sandbox
       vars:
