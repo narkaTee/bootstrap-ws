@@ -101,14 +101,28 @@ jobs:
         run: |
           sudo chmod +r /boot/vmlinuz-*
 
-      - name: Build KVM image
+      - name: Allow access to /dev/kvm to speed up virt-* operations and disable app armor
         run: |
           sudo aa-teardown || true
           # Adding the pipeline user to the kvm group is not feasable, we cannot re-login.
           # This could speed up the image build (at least libvirt states that it will)
           sudo chmod 0666 /dev/kvm
+
+      # The 22.04 runners fscheck verion does not know the orpan_file feature, which makes virt-resize fail.
+      # As 24.04 is broken in other ways I am stuck with this workaround for now.
+      - name: Disable incompatible ext4 features
+        run: |
+          echo "Disabling orphan_file feature for compatibility with virt-resize..."
+          sudo modprobe nbd max_part=8
+          sudo qemu-nbd --connect=/dev/nbd0 "$CACHE_DIR/debian-13-nocloud-amd64.qcow2"
+          sleep 1
+          sudo debugfs -w -R "feature ^FEATURE_C12" /dev/nbd0p1
+          sudo qemu-nbd --disconnect /dev/nbd0
+
+      - name: Build KVM image
+        run: |
           sudo systemctl disable --now apparmor.service
-          time bash sandbox/kvm-sandbox-build.sh
+          SKIP_CHECKSUM=1 time bash sandbox/kvm-sandbox-build.sh
 
       - name: Verify build artifacts
         run: |

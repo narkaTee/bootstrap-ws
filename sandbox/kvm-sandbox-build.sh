@@ -5,6 +5,7 @@ IMG_CACHE="./sandbox/cache"
 BASE_IMG="$IMG_CACHE/debian-13-nocloud-amd64.qcow2"
 CUSTOM_IMG="$IMG_CACHE/debian-13-nocloud-amd64-custom.qcow2"
 VERBOSE="${VERBOSE:-0}"
+SKIP_CHECKSUM="${SKIP_CHECKSUM:-0}"
 
 conditional_download_checksums() {
   curl -s -o "$IMG_CACHE/SHA512SUMS" \
@@ -68,6 +69,8 @@ conditional_download_checksums
 
 if [ ! -f "$BASE_IMG" ]; then
   download_img
+elif [ "$SKIP_CHECKSUM" = "1" ]; then
+  echo "Skipping checksum validation (SKIP_CHECKSUM=1). Using existing image."
 elif ! checksum_matches; then
   echo "SHA512 checksum mismatch. Re-downloading the image."
   rm "$BASE_IMG"
