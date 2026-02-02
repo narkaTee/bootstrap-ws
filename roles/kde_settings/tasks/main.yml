@@ -4,6 +4,20 @@
   ansible.builtin.package:
     name:
       - kde-config-plymouth
+      - plymouth-theme-breeze
+
+- name: Set Plymouth theme to breeze
+  become: true
+  ansible.builtin.command:
+    cmd: plymouth-set-default-theme breeze
+  register: kde_settings_plymouth_theme_set
+  changed_when: kde_settings_plymouth_theme_set.rc == 0
+
+- name: Rebuild initramfs to apply Plymouth theme
+  become: true
+  ansible.builtin.command:
+    cmd: update-initramfs -u
+  when: kde_settings_plymouth_theme_set.changed
 
 - name: Ensure KDE config directory exists
   ansible.builtin.file:
