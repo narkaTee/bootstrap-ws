@@ -69,7 +69,7 @@ jobs:
           echo "hash_short=$DEBIAN_HASH_SHORT" >> $GITHUB_OUTPUT
           echo "Debian upstream hash: $DEBIAN_HASH"
 
-      - name: Restore image and checksums from cache
+      - name: Restore image from cache
         id: cache_base
         uses: actions/cache@v5
         with:
@@ -104,6 +104,7 @@ jobs:
       - name: Allow access to /dev/kvm to speed up virt-* operations and disable app armor
         run: |
           sudo aa-teardown || true
+          sudo systemctl disable --now apparmor.service
           # Adding the pipeline user to the kvm group is not feasable, we cannot re-login.
           # This could speed up the image build (at least libvirt states that it will)
           sudo chmod 0666 /dev/kvm
@@ -121,7 +122,6 @@ jobs:
 
       - name: Build KVM image
         run: |
-          sudo systemctl disable --now apparmor.service
           SKIP_CHECKSUM=1 time bash sandbox/kvm-sandbox-build.sh
 
       - name: Verify build artifacts

@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Disable systemd-firstboot wizard
+systemctl mask systemd-firstboot.service || true
+
+# Pre-configure settings that firstboot would ask for
+echo "Europe/Berlin" > /etc/timezone
+ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+
 echo "kvm-sandbox" > /etc/hostname
 hostname kvm-sandbox
 
