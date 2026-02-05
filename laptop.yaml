@@ -17,6 +17,10 @@
           - oras
           - neovim
           - neovim-qt
+          - ruby-rspec
+          - bats
+          - bats-file
+          - bats-assert
           # kvm
           - qemu-system
           - libvirt-daemon-system
