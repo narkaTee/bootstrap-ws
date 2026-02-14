@@ -2,6 +2,12 @@
 - name: Setup with root
   hosts: local
   roles:
+    - role: determinate_nix
+      vars:
+        # Version: https://github.com/DeterminateSystems/nix-installer/releases
+        determinate_nix_version: "v3.16.0"
+        # Checksum: curl -fsSL https://install.determinate.systems/nix/tag/v3.16.0 | sha256sum
+        determinate_nix_installer_checksum: "sha256:1bd358c8a6e48571b2cc81b5a5ca17de8db537f642cb88b31689710ac6e462c1"
     - role: yubikey
     - role: workstation_hardening
     - role: firefox

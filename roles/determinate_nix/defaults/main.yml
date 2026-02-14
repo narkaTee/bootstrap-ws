@@ -1,0 +1,5 @@
+---
+determinate_nix_state: present
+determinate_nix_version: latest
+determinate_nix_installer_checksum: ""
+determinate_nix_extra_args: []

@@ -1,0 +1,22 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Check Determinate Nix receipt
+      ansible.builtin.stat:
+        path: /nix/receipt.json
+      register: determinate_nix_receipt
+
+    - name: Check nix binary
+      ansible.builtin.stat:
+        path: /nix/var/nix/profiles/default/bin/nix
+      register: determinate_nix_binary
+
+    - name: Verify Determinate Nix installation
+      ansible.builtin.assert:
+        that:
+          - determinate_nix_receipt.stat.exists
+          - determinate_nix_binary.stat.exists
+          - determinate_nix_binary.stat.executable
+        fail_msg: Determinate Nix installation could not be verified

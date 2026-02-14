@@ -1,0 +1,21 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Check Determinate Nix receipt
+      ansible.builtin.stat:
+        path: /nix/receipt.json
+      register: determinate_nix_receipt
+
+    - name: Check nix-installer binary
+      ansible.builtin.stat:
+        path: /nix/nix-installer
+      register: determinate_nix_installer
+
+    - name: Verify Determinate Nix is removed
+      ansible.builtin.assert:
+        that:
+          - not determinate_nix_receipt.stat.exists
+          - not determinate_nix_installer.stat.exists
+        fail_msg: Determinate Nix uninstall could not be verified

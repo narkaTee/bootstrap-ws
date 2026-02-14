@@ -1,0 +1,19 @@
+---
+- name: Run role
+  hosts: all
+  any_errors_fatal: true
+  tasks:
+    - name: Install determinate_nix role
+      include_role:
+        name: "../../../determinate_nix"
+      vars:
+        determinate_nix_extra_args:
+          - linux
+          - --init
+          - none
+
+    - name: Uninstall determinate_nix role
+      include_role:
+        name: "../../../determinate_nix"
+      vars:
+        determinate_nix_state: absent

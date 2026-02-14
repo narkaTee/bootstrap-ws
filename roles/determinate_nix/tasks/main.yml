@@ -1,0 +1,93 @@
+---
+- name: Set installer URL
+  ansible.builtin.set_fact:
+    determinate_nix_installer_url: >-
+      {{
+        'https://install.determinate.systems/nix'
+        if determinate_nix_version == 'latest'
+        else 'https://install.determinate.systems/nix/tag/' + determinate_nix_version
+      }}
+  tags: "determinate_nix"
+
+- name: Check if Determinate Nix receipt exists
+  ansible.builtin.stat:
+    path: /nix/receipt.json
+  register: determinate_nix_receipt
+  tags: "determinate_nix"
+
+- name: Check for download tool
+  when:
+    - determinate_nix_state == 'present'
+  ansible.builtin.shell: "command -v curl || command -v wget"
+  register: determinate_nix_download_tool_check
+  changed_when: false
+  failed_when: false
+  tags: "determinate_nix"
+
+- name: Install Determinate Nix prerequisites on apt systems
+  when:
+    - determinate_nix_state == 'present'
+    - determinate_nix_download_tool_check.rc != 0
+    - ansible_pkg_mgr == 'apt'
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+    name: curl
+    state: present
+  tags: "determinate_nix"
+
+- name: Install Determinate Nix prerequisites on non-apt systems
+  when:
+    - determinate_nix_state == 'present'
+    - determinate_nix_download_tool_check.rc != 0
+    - ansible_pkg_mgr != 'apt'
+  become: true
+  ansible.builtin.package:
+    name: curl
+    state: present
+  tags: "determinate_nix"
+
+- name: Install Determinate Nix
+  when:
+    - determinate_nix_state == 'present'
+    - not determinate_nix_receipt.stat.exists
+  become: true
+  block:
+    - name: Download Determinate Nix bootstrap script
+      ansible.builtin.get_url:
+        url: "{{ determinate_nix_installer_url }}"
+        dest: /tmp/determinate-nix-installer.sh
+        mode: "0755"
+        checksum: >-
+          {{
+            determinate_nix_installer_checksum
+            if determinate_nix_installer_checksum | length > 0
+            else omit
+          }}
+
+    - name: Run Determinate Nix installer
+      ansible.builtin.command: >-
+        /tmp/determinate-nix-installer.sh
+        install
+        {{ determinate_nix_extra_args | join(' ') }}
+        --no-confirm
+        --determinate
+      args:
+        creates: /nix/receipt.json
+      environment:
+        _ansi_escapes_are_valid: "false"
+
+- name: Check if uninstall binary exists
+  when: determinate_nix_state == 'absent'
+  ansible.builtin.stat:
+    path: /nix/nix-installer
+  register: determinate_nix_uninstall_binary
+  tags: "determinate_nix"
+
+- name: Uninstall Determinate Nix
+  when:
+    - determinate_nix_state == 'absent'
+    - determinate_nix_uninstall_binary.stat.exists
+  become: true
+  ansible.builtin.command: /nix/nix-installer uninstall --no-confirm
+  tags: "determinate_nix"

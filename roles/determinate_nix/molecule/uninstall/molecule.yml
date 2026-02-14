@@ -1,0 +1,15 @@
+---
+# Uninstall behavior is role-level; one distro is enough and avoids extra flake/runtime.
+platforms:
+  - name: debian13
+    image: docker.io/debian:13
+
+scenario:
+  test_sequence:
+    - create
+    - prepare
+    - converge
+    - side_effect
+    - verify
+    - cleanup
+    - destroy
