@@ -46,7 +46,7 @@ jobs:
           # oras is only avilable since ubuntu 25.10 and not on the lts versions github uses.
 
       - name: Install oras
-        uses: oras-project/setup-oras@v1
+        uses: oras-project/setup-oras@v2
 
       - name: Restore image checksums from cache
         uses: actions/cache@v5
