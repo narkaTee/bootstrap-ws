@@ -1,0 +1,28 @@
+- name: Create .ssh directory for user
+  ansible.builtin.file:
+    path: "~/.ssh"
+    state: directory
+    mode: '0700'
+
+- name: Create .ssh/config.d/ directory for user
+  ansible.builtin.file:
+    path: "~/.ssh/config.d"
+    state: directory
+    mode: '0700'
+
+- name: Configure ssh config for user
+  ansible.builtin.copy:
+    dest: "~/.ssh/config"
+    content: |
+      {{ ssh_user_config_main | join('\n\n') }}
+
+      Include ~/.ssh/config.d/*
+    mode: '0600'
+
+- name: Additional ssh config snippets for user
+  ansible.builtin.copy:
+    dest: "~/.ssh/config.d/additional-config.conf"
+    content: |
+      {{ ssh_user_config_additional | join('\n\n') }}
+    mode: '0600'
+  when: ssh_user_config_additional | length > 0

@@ -15,5 +15,9 @@ base_packages_default:
   - python3-venv
   - python3-pip
   - ripgrep
+  - ruby-rspec
+  - bats
+  - bats-file
+  - bats-assert
 
 base_packages_extra: []

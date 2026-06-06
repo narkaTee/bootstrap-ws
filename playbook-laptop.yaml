@@ -1,6 +1,6 @@
 ---
 - name: Setup with root
-  hosts: laptop
+  hosts: local
   roles:
     - role: yubikey
     - role: workstation_hardening
@@ -17,10 +17,6 @@
           - oras
           - neovim
           - neovim-qt
-          - ruby-rspec
-          - bats
-          - bats-file
-          - bats-assert
           # kvm
           - qemu-system
           - libvirt-daemon-system
@@ -42,7 +38,7 @@
           RUN+="/usr/bin/uvcdynctrl -d$kernel '--set=Power Line Frequency' 1"
 
 - name: Setup with local user
-  hosts: laptop_user
+  hosts: local_user
   roles:
     - fonts
     - dotfiles
@@ -52,6 +48,13 @@
         onepassword_install_cli: true
     - kde_settings
     - jetbrains_toolbox
+    - role: ssh_user_config
+      vars:
+        ssh_user_config_main:
+          - |
+            # Desktop Apps will not see the SSH_AUTH_SOCK from the dotfiles
+            Host *
+                IdentityAgent ~/.1password/agent.sock
 
   tasks:
     - name: Enable podman socket for user
@@ -97,33 +100,3 @@
         name: "{{ ansible_user_id }}"
         append: true
         groups: libvirt
-
-    - name: Create .ssh directory for user
-      ansible.builtin.file:
-        path: "~/.ssh"
-        state: directory
-        mode: '0700'
-
-    - name: Create .ssh/config.d/ directory for user
-      ansible.builtin.file:
-        path: "~/.ssh/config.d"
-        state: directory
-        mode: '0700'
-
-    - name: Configure ssh config
-      ansible.builtin.copy:
-        dest: "~/.ssh/config"
-        content: |
-          # Desktop Apps will not see the SSH_AUTH_SOCK from the dotfiles
-          Host *
-              IdentityAgent ~/.1password/agent.sock
-
-          Include ~/.ssh/config.d/*
-        mode: '0600'
-
-    - name: Additional ssh config snippets
-      ansible.builtin.copy:
-        dest: "~/.ssh/config.d/additional-config.conf"
-        content: |
-          {{ ssh_additional_config | join('\n\n') }}
-        mode: '0600'

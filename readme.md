@@ -1,4 +1,4 @@
-# laptop setup
+# Workstation setup
 
 ```
 sudo apt install ansible -y
@@ -7,13 +7,17 @@ cd bootstrap-ws
 # you should check what secret settings you want to make
 vim inventory/group_vars/laptop.yaml
 ./setup-laptop.sh
+# or for wsl
+vim inventory/group_vars/wsl.yaml
+./setup-wsl.sh
 ```
 
 ## SSH Config
 
-The runbook sets up a `~/.ssh/config.d/` folder where configurations can be dropped
+The role `ssh_user_config` sets up a `~/.ssh/config.d/` folder where configurations can be dropped
 
-To put a `additional-config.conf` into that folder edit `inventory/group_vars/laptop.yaml`
+To put a `additional-config.conf` into that folder add a variable `ssh_user_config_additional` into `inventory/group_vars/laptop.yaml` or the wsl file.
+There is also a `ssh_user_config_main` to put additional lines into the `~/.ssh/config`, mainly as backward compatibility (it's late and I don't want to break the laptop setup 🤷).
 
 ```
 ssh_additional_config:
@@ -104,8 +108,7 @@ The script will not work properly if run from the wrong working dir
 
 1. arch base install
 2. login as root
-3. `cd ansible`
-4. `./setup.sh blackarch.yml`
+3. `./setup-pen.sh playbook-blackarch.yml`
 
 # setup pen test tooling
 
@@ -113,5 +116,4 @@ distro independant
 
 1. base install (arch or kali)
 2. login as root
-3. `cd ansible`
-4. `./setup.sh tooling.yml`
+3. `./setup-pen.sh playbook-pen-test-tooling.yml`

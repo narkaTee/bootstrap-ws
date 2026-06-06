@@ -1,0 +1,25 @@
+---
+- name: Setup with root
+  hosts: local
+  roles:
+    - role: base_packages
+      vars:
+        base_packages_extra:
+          - ansible-lint
+          - podman
+          - podman-compose
+          - bubblewrap
+          - oras
+          # kvm
+          - qemu-system
+          - guestfs-tools
+
+- name: Setup with local user
+  hosts: local_user
+  roles:
+    - dotfiles
+    - user_setup
+    - role: onepassword
+      vars:
+        onepassword_install_cli: true
+    - role: ssh_user_config

@@ -1,10 +1,10 @@
 ---
 all:
   hosts:
-    laptop:
+    local:
       ansible_connection: local
       ansible_become: true
-    laptop_user:
+    local_user:
       ansible_connection: local
     blackarch:
       ansible_connection: local
@@ -13,7 +13,3 @@ all:
       ansible_connection: local
       ansible_become: true
       ansible_become_user: '{{ user.name }}'
-laptop:
-  hosts:
-    laptop:
-    laptop_user:
