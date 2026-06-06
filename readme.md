@@ -30,6 +30,13 @@ ssh_additional_config:
         User anotheruser
 ```
 
+### WSL 2
+
+To use 1password with wsl 2 you need to use the windows executeable (ssh.exe, ssh-add.exe etc...).
+https://www.1password.dev/ssh/integrations/wsl
+
+The wsl playbook sets this up automatically for the dotfiles.
+
 ## yubikey
 
 * pam auth with yubikey

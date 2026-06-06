@@ -23,3 +23,13 @@
       vars:
         onepassword_install_cli: true
     - role: ssh_user_config
+  tasks:
+    - name: "Create aliases for ssh"
+      ansible.builtin.lineinfile:
+        create: true
+        dest: "~/.config/setup/env.local.sh"
+        line: "{{ item }}"
+      with_items:
+        - "alias ssh=ssh.exe"
+        - "alias ssh-add=ssh-add.exe"
+        - "alias scp=scp.exe"
