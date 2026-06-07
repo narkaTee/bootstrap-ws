@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# VERY crude op cli compatibiliy hack...
+# There is not integration to run the native op cli inside wsl.
+# The workaround is to tun op.exe through the wsl interop magic
+# But op run will be unable to run the execute command inside wsl,
+# so we'll just run op inject to get ahold of the secrets.
+# No files containing secrets stored on disk (for now)
+
+# Tested with:
+# - op run --no-masking --env-file asd.env -- env
+if [ "$1" == "run" ]; then
+    #echo "Arguments before:" "$@"
+    shift
+
+    for param in "$@"; do
+        case "$param" in
+            "--env-file")
+                file="$2"
+                shift 2
+                ;;
+            "--")
+                cmd=("$@")
+                ;;
+            # just ignore
+            *)
+                shift
+                ;;
+        esac
+    done
+
+    if [ -z "$file" ] || [ "${#cmd[@]}" -eq 0 ]; then
+        echo "No file and/or command given." >&2
+        exit 1
+    fi
+
+    #echo "using $file"
+    env=$(grep -v '^[[:space:]]*#' "$file" | op.exe inject)
+    #echo "would run:" "${cmd[@]}"
+    if [ -z "$env" ]; then
+        echo "no env extracted to run... aborting" >&2
+        exit 1
+    fi
+
+    env "$env" "${cmd[@]}"
+    exit $?
+fi
+
+op.exe "$@"

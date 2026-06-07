@@ -19,9 +19,6 @@
   roles:
     - dotfiles
     - user_setup
-    - role: onepassword
-      vars:
-        onepassword_install_cli: true
     - role: ssh_user_config
   tasks:
     - name: "Create aliases for ssh"
