@@ -21,7 +21,7 @@ jobs:
       kvm: ${{ steps.changes.outputs.kvm }}
       container: ${{ steps.changes.outputs.container }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # we need full histrory for the change detection
           fetch-depth: 0
