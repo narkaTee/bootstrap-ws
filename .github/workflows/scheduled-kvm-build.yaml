@@ -22,7 +22,7 @@ jobs:
       update_needed: ${{ steps.check.outputs.update_needed }}
     steps:
       - name: Restore image checksums from cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ${{ env.CACHE_DIR }}/SHA512SUMS
