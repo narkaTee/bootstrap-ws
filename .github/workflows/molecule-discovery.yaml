@@ -15,7 +15,7 @@ jobs:
       roles: "${{ steps.discover.outputs.roles }}"
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Discover roles with molecule tests
         id: discover
@@ -35,7 +35,7 @@ jobs:
         role: "${{ fromJson(needs.discover-molecule-tests.outputs.roles) }}"
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Run Molecule tests
         uses: ./.github/actions/molecule-test
