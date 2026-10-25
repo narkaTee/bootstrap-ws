@@ -1,48 +1,92 @@
-#!/usr/bin/env bash
-# VERY crude op cli compatibiliy hack...
-# There is not integration to run the native op cli inside wsl.
-# The workaround is to tun op.exe through the wsl interop magic
-# But op run will be unable to run the execute command inside wsl,
-# so we'll just run op inject to get ahold of the secrets.
-# No files containing secrets stored on disk (for now)
+#!/usr/bin/env ruby
+# frozen_string_literal: true
 
-# Tested with:
-# - op run --no-masking --env-file asd.env -- env
-if [ "$1" == "run" ]; then
-    #echo "Arguments before:" "$@"
-    shift
+require 'open3'
 
-    for param in "$@"; do
-        case "$param" in
-            "--env-file")
-                file="$2"
-                shift 2
-                ;;
-            "--")
-                cmd=("$@")
-                ;;
-            # just ignore
-            *)
-                shift
-                ;;
-        esac
-    done
+# A deliberately limited op run adapter: Windows resolves secrets, Linux runs commands.
+module WslOp
+  class Error < StandardError; end
 
-    if [ -z "$file" ] || [ "${#cmd[@]}" -eq 0 ]; then
-        echo "No file and/or command given." >&2
-        exit 1
-    fi
+  module_function
 
-    #echo "using $file"
-    env=$(grep -v '^[[:space:]]*#' "$file" | op.exe inject)
-    #echo "would run:" "${cmd[@]}"
-    if [ -z "$env" ]; then
-        echo "no env extracted to run... aborting" >&2
-        exit 1
-    fi
+  def run(args)
+    exec('op.exe', *args) unless args.first == 'run'
+    args = args.drop(1)
+    file = account = nil
+    no_masking = false
 
-    env "$env" "${cmd[@]}"
-    exit $?
-fi
+    until args.empty? || args.first == '--'
+      option = args.shift
+      case option
+      when '--env-file', '--account'
+        value = args.shift
+        raise Error, "#{option} requires a value" if value.nil? || value.start_with?('-')
 
-op.exe "$@"
+        if option == '--env-file'
+          raise Error, 'Only one --env-file is supported' if file
+          file = value
+        else
+          account = value
+        end
+      when '--no-masking'
+        no_masking = true
+      else
+        raise Error, 'Unsupported op run option (see wsl-hacks/readme.md)'
+      end
+    end
+
+    raise Error, 'Expected -- followed by a command' unless args.shift == '--' && !args.empty?
+    raise Error, '--env-file is required' unless file
+    raise Error, '--no-masking is required: this wrapper cannot mask command output' unless no_masking
+
+    values = parse_env(File.read(file))
+    values.each do |key, value|
+      next unless value.start_with?('op://')
+
+      read_args = ['op.exe', 'read', '--no-newline', value]
+      read_args += ['--account', account] if account
+      stdout, _stderr, status = Open3.capture3(*read_args)
+      raise Error, "Secret lookup failed for #{key}" unless status.success?
+      raise Error, "Secret contains a NUL byte for #{key}" if stdout.include?("\0")
+
+      values[key] = stdout
+    end
+
+    exec(values, [args.first, args.first], *args.drop(1))
+  end
+
+  def parse_env(content)
+    values = {}
+    content.each_line.with_index(1) do |line, number|
+      line = line.strip
+      next if line.empty? || line.start_with?('#')
+
+      match = /\A([A-Za-z_][A-Za-z0-9_]*)\s*=(.*)\z/.match(line)
+      raise Error, "Invalid env assignment on line #{number}" unless match
+
+      key, value = match.captures
+      value = value.strip
+      if value.start_with?('"', "'")
+        quote = value[0]
+        raise Error, "Unmatched quotes on line #{number}" unless value.length >= 2 && value.end_with?(quote)
+
+        value = value[1...-1]
+      end
+      raise Error, "NUL byte on line #{number}" if value.include?("\0")
+
+      values[key] = value
+    end
+    values
+  end
+end
+
+begin
+  WslOp.run(ARGV)
+rescue WslOp::Error => e
+  warn "op wrapper: #{e.message}"
+  exit 1
+rescue SystemCallError, ArgumentError
+  # Do not include exception messages: they may contain template or secret data.
+  warn 'op wrapper: unable to read the template or execute a program'
+  exit 1
+end
